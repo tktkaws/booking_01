@@ -30,7 +30,13 @@ type ParsedBooking = Booking & {
 
 type BookingsByDate = Map<string, ParsedBooking[]>;
 
-const weekdayLabels = ["日", "月", "火", "水", "木", "金", "土"];
+const weekdayLabelsFull = ["日", "月", "火", "水", "木", "金", "土"];
+const WORKING_DAY_INDICES = [1, 2, 3, 4, 5] as const;
+const WORKING_DAY_COUNT = WORKING_DAY_INDICES.length;
+const SLOT_INTERVAL_MINUTES = 15;
+const DAY_START_MINUTES = 9 * 60;
+const DAY_END_MINUTES = 18 * 60;
+const SLOT_HEIGHT_PX = 28;
 const monthFormatter = new Intl.DateTimeFormat("ja-JP", {
   year: "numeric",
   month: "long",
@@ -46,7 +52,7 @@ const fullDateFormatter = new Intl.DateTimeFormat("ja-JP", {
   weekday: "short",
 });
 
-const TIME_SLOTS = generateTimeSlots(9, 18, 15);
+const TIME_SLOTS = generateTimeSlots(9, 18, SLOT_INTERVAL_MINUTES);
 
 export default function Home() {
   const bookings = useMemo<ParsedBooking[]>(() => {
@@ -114,7 +120,7 @@ export default function Home() {
     }
     if (view === "week") {
       const start = startOfWeek(weekReferenceDate);
-      const end = addDays(start, 6);
+      const end = addDays(start, WORKING_DAY_COUNT - 1);
       return `${monthDayFormatter.format(start)}〜${monthDayFormatter.format(end)}`;
     }
     return "全予約一覧";
@@ -185,9 +191,14 @@ export default function Home() {
     setDetailBooking(null);
   };
 
+  const mainClassName = cn(
+    "mx-auto w-full px-6 py-10",
+    view === "list" ? "max-w-6xl" : "max-w-none"
+  );
+
   return (
     <div className="min-h-screen bg-slate-100">
-      <main className="mx-auto w-full max-w-6xl px-6 py-10">
+      <main className={mainClassName}>
         <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-semibold text-slate-900">
@@ -333,25 +344,33 @@ function MonthView({ focusDate, selectedDate, bookingsByDate, onSelectDate, onCr
       handleBookingClick(booking);
     }
   };
-  const start = startOfMonth(focusDate);
-  const end = endOfMonth(focusDate);
-  const offset = start.getDay();
-  const daysInMonth = end.getDate();
-  const totalCells = Math.ceil((offset + daysInMonth) / 7) * 7;
+  const monthStart = startOfMonth(focusDate);
+  const monthEnd = endOfMonth(focusDate);
+  const calendarStart = startOfWeek(monthStart);
+  const calendarEnd = endOfWorkWeek(monthEnd);
+  const calendarDays: Date[] = [];
+  for (
+    let cursor = calendarStart;
+    cursor <= calendarEnd;
+    cursor = addDays(cursor, 1)
+  ) {
+    if (isWeekday(cursor)) {
+      calendarDays.push(cursor);
+    }
+  }
   const today = stripTime(new Date());
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50 text-center text-xs font-semibold text-slate-600">
-        {weekdayLabels.map((label) => (
-          <div key={label} className="px-2 py-3">
-            {label}
+      <div className="grid grid-cols-5 border-b border-slate-200 bg-slate-50 text-center text-xs font-semibold text-slate-600">
+        {WORKING_DAY_INDICES.map((weekday) => (
+          <div key={weekday} className="px-2 py-3">
+            {weekdayLabelsFull[weekday]}
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-7 gap-px bg-slate-200 p-px">
-        {Array.from({ length: totalCells }).map((_, index) => {
-          const cellDate = addDays(start, index - offset);
+      <div className="grid grid-cols-5 gap-px bg-slate-200 p-px">
+        {calendarDays.map((cellDate, index) => {
           const isCurrentMonth = cellDate.getMonth() === focusDate.getMonth();
           const isSelected = selectedDate ? isSameDay(cellDate, selectedDate) : false;
           const isToday = isSameDay(cellDate, today);
@@ -419,14 +438,12 @@ type WeekViewProps = {
 
 function WeekView({ referenceDate, selectedDate, bookingsByDate, onSelectDate, onBookingClick }: WeekViewProps) {
   const weekStart = startOfWeek(referenceDate);
-  const weekDays = Array.from({ length: 7 }).map((_, index) => addDays(weekStart, index));
-  const slotMinutes = 15;
-  const startMinutes = 9 * 60;
-  const endMinutes = 18 * 60;
-  const slotCount = (endMinutes - startMinutes) / slotMinutes;
-  const slotHeight = 28;
+  const weekDays = Array.from({ length: WORKING_DAY_COUNT }).map((_, index) =>
+    addDays(weekStart, index)
+  );
+  const slotCount = (DAY_END_MINUTES - DAY_START_MINUTES) / SLOT_INTERVAL_MINUTES;
   const columnStyle = {
-    gridTemplateRows: `repeat(${slotCount}, ${slotHeight}px)`,
+    gridTemplateRows: `repeat(${slotCount}, ${SLOT_HEIGHT_PX}px)`,
   };
   const handleBookingBlockClick = (
     event: MouseEvent<HTMLDivElement>,
@@ -447,13 +464,13 @@ function WeekView({ referenceDate, selectedDate, bookingsByDate, onSelectDate, o
   };
 
   const timeLabels = Array.from({ length: slotCount }).map((_, index) => {
-    const totalMinutes = startMinutes + index * slotMinutes;
+    const totalMinutes = DAY_START_MINUTES + index * SLOT_INTERVAL_MINUTES;
     return formatMinutes(totalMinutes);
   });
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div className="grid grid-cols-[90px_repeat(7,minmax(0,1fr))] border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600">
+      <div className="grid grid-cols-[90px_repeat(5,minmax(0,1fr))] border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600">
         <div className="px-3 py-3 text-right">時間</div>
         {weekDays.map((day) => (
           <button
@@ -468,18 +485,19 @@ function WeekView({ referenceDate, selectedDate, bookingsByDate, onSelectDate, o
             )}
           >
             <div className="text-[11px] text-slate-500">
-              {weekdayLabels[day.getDay()]}
+              {weekdayLabelsFull[day.getDay()]}
             </div>
             <div className="text-sm font-semibold">{monthDayFormatter.format(day)}</div>
           </button>
         ))}
       </div>
-      <div className="grid grid-cols-[90px_repeat(7,minmax(0,1fr))]">
+      <div className="grid grid-cols-[90px_repeat(5,minmax(0,1fr))]">
         <div className="flex flex-col text-xs text-slate-500">
           {timeLabels.map((label, index) => (
             <div
               key={label + index}
-              className="flex h-[28px] items-start justify-end border-b border-slate-100 pr-2"
+              className="flex items-start justify-end border-b border-slate-100 pr-2"
+              style={{ height: SLOT_HEIGHT_PX }}
             >
               {index % 2 === 0 ? label : ""}
             </div>
@@ -493,7 +511,7 @@ function WeekView({ referenceDate, selectedDate, bookingsByDate, onSelectDate, o
             <div
               key={dateKey}
               className="relative border-l border-slate-100"
-              style={{ height: slotCount * slotHeight }}
+              style={{ height: slotCount * SLOT_HEIGHT_PX }}
             >
               <div className="absolute inset-0 grid" style={columnStyle}>
                 {timeLabels.map((_, index) => (
@@ -510,9 +528,9 @@ function WeekView({ referenceDate, selectedDate, bookingsByDate, onSelectDate, o
                 {dailyBookings.map((booking) => {
                   const range = calculateSlotRange(
                     booking,
-                    startMinutes,
-                    endMinutes,
-                    slotMinutes
+                    DAY_START_MINUTES,
+                    DAY_END_MINUTES,
+                    SLOT_INTERVAL_MINUTES
                   );
                   if (!range) {
                     return null;
@@ -553,49 +571,76 @@ type ListViewProps = {
 };
 
 function ListView({ bookings, onBookingClick }: ListViewProps) {
-  const handleCardClick = (booking: ParsedBooking) => {
+  const handleRowClick = (booking: ParsedBooking) => {
     onBookingClick(booking);
+  };
+  const handleRowKeyDown = (
+    event: KeyboardEvent<HTMLTableRowElement>,
+    booking: ParsedBooking
+  ) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      handleRowClick(booking);
+    }
   };
 
   return (
-    <div className="space-y-3">
-      {bookings.map((booking) => (
-        <article
-          key={booking.id}
-          role="button"
-          tabIndex={0}
-          onClick={() => handleCardClick(booking)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " " ) {
-              event.preventDefault();
-              handleCardClick(booking);
-            }
-          }}
-          className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-blue-200 hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-200"
-        >
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2
-              className="text-base font-semibold"
-              style={{ color: booking.color }}
-            >
-              {booking.title}
-            </h2>
-            <span className="text-xs font-medium text-slate-500">
-              {booking.department} / {booking.room}
-            </span>
-          </div>
-          <div className="mt-2 text-sm text-slate-700">
-            {fullDateFormatter.format(booking.startDate)} {formatMinutes(booking.startMinutes)}〜
-            {formatMinutes(booking.endMinutes)}
-          </div>
-          <div className="mt-1 text-xs text-slate-500">担当: {booking.owner}</div>
-          {booking.isCompanyWide && (
-            <span className="mt-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-semibold text-blue-700">
-              全社共有
-            </span>
-          )}
-        </article>
-      ))}
+    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+      <table className="min-w-[720px] w-full divide-y divide-slate-200 text-sm">
+        <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <tr>
+            <th scope="col" className="px-4 py-3 text-left">件名</th>
+            <th scope="col" className="px-4 py-3 text-left">部署 / 会議室</th>
+            <th scope="col" className="px-4 py-3 text-left">日時</th>
+            <th scope="col" className="px-4 py-3 text-left">担当</th>
+            <th scope="col" className="px-4 py-3 text-left">属性</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-200 text-slate-700">
+          {bookings.map((booking) => {
+            const scheduleLabel = `${fullDateFormatter.format(booking.startDate)} ${formatMinutes(booking.startMinutes)}〜${formatMinutes(booking.endMinutes)}`;
+            return (
+              <tr
+                key={booking.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => handleRowClick(booking)}
+                onKeyDown={(event) => handleRowKeyDown(event, booking)}
+                className="cursor-pointer transition hover:bg-slate-50 focus:outline-none focus-visible:bg-blue-50 focus-visible:ring-2 focus-visible:ring-blue-400"
+              >
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <span
+                      className="inline-flex h-2.5 w-2.5 flex-none rounded-full"
+                      style={{ backgroundColor: booking.color }}
+                      aria-hidden
+                    />
+                    <span className="font-semibold" style={{ color: booking.color }}>
+                      {booking.title}
+                    </span>
+                  </div>
+                </td>
+                <td className="px-4 py-3 text-xs text-slate-500">
+                  {booking.department} / {booking.room}
+                </td>
+                <td className="px-4 py-3 text-xs text-slate-500">
+                  {scheduleLabel}
+                </td>
+                <td className="px-4 py-3 text-xs text-slate-500">{booking.owner}</td>
+                <td className="px-4 py-3 text-xs text-slate-500">
+                  {booking.isCompanyWide ? (
+                    <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 font-semibold text-blue-700">
+                      全社共有
+                    </span>
+                  ) : (
+                    <span className="text-slate-400">-</span>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -619,9 +664,8 @@ function CreateBookingModal({
 }: CreateBookingModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const dateKey = toDateKey(selectedDate);
-  const dailyBookings = useMemo(() => {
-    return bookingsByDate.get(dateKey) ?? [];
-  }, [bookingsByDate, dateKey]);
+  const startDetailsRef = useRef<HTMLDetailsElement>(null);
+  const endDetailsRef = useRef<HTMLDetailsElement>(null);
 
   const initialFormState = useMemo(() => {
     return {
@@ -637,6 +681,13 @@ function CreateBookingModal({
   }, [rooms, departments, dateKey]);
 
   const [formState, setFormState] = useState(initialFormState);
+  const formDateKey = formState.date || dateKey;
+  const formDate = useMemo(() => {
+    return fromDateKey(formDateKey);
+  }, [formDateKey]);
+  const dailyBookings = useMemo(() => {
+    return bookingsByDate.get(formDateKey) ?? [];
+  }, [bookingsByDate, formDateKey]);
 
   useEffect(() => {
     setFormState(initialFormState);
@@ -684,6 +735,12 @@ function CreateBookingModal({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
+    if (name === "start") {
+      startDetailsRef.current?.removeAttribute("open");
+    }
+    if (name === "end") {
+      endDetailsRef.current?.removeAttribute("open");
+    }
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -696,14 +753,14 @@ function CreateBookingModal({
   return (
     <dialog
       ref={dialogRef}
-      className="max-h-[90vh] w-[min(720px,90vw)] rounded-xl border border-slate-200 bg-white p-0 text-slate-900 shadow-2xl backdrop:bg-slate-900/60"
+      className="fixed left-1/2 top-1/2 max-h-[90vh] w-[min(720px,90vw)] -translate-x-1/2 -translate-y-1/2 transform rounded-xl border border-slate-200 bg-white p-0 text-slate-900 shadow-2xl backdrop:bg-slate-900/60"
     >
       <form method="dialog" className="flex flex-col" onSubmit={handleSubmit}>
         <header className="flex items-start justify-between border-b border-slate-200 px-6 py-4">
           <div>
             <h2 className="text-lg font-semibold">予約を作成</h2>
             <p className="text-xs text-slate-500">
-              {fullDateFormatter.format(selectedDate)} の会議室予約を登録します
+              {fullDateFormatter.format(formDate)} の会議室予約を登録します
             </p>
           </div>
           <button
@@ -717,6 +774,124 @@ function CreateBookingModal({
         </header>
         <div className="grid max-h-[60vh] grid-cols-1 gap-6 overflow-y-auto px-6 py-6 sm:grid-cols-[1.2fr_0.8fr]">
           <section className="space-y-4">
+            <div className="flex flex-col gap-4">
+              <label className="flex flex-col gap-1 text-sm font-semibold text-slate-700">
+                日付
+                <input
+                  type="date"
+                  name="date"
+                  value={formState.date}
+                  onChange={handleFieldChange}
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                />
+              </label>
+              <div className="flex flex-col gap-2 text-sm font-semibold text-slate-700">
+                <span>開始</span>
+                <details
+                  ref={startDetailsRef}
+                  className="group relative"
+                  onToggle={(event) => {
+                    if (event.currentTarget.open) {
+                      endDetailsRef.current?.removeAttribute("open");
+                    }
+                  }}
+                >
+                  <summary
+                    className="flex w-full list-none items-center justify-between rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-200 hover:bg-blue-50/80 focus:outline-none focus:ring-2 focus:ring-blue-200 [&::-webkit-details-marker]:hidden"
+                  >
+                    <span>{formState.start}</span>
+                    <span className="text-xs text-slate-500">変更</span>
+                  </summary>
+                  <div className="absolute left-0 top-full z-30 mt-2 hidden w-[min(360px,calc(100vw-5rem))] rounded-lg border border-slate-200 bg-white p-3 shadow-xl group-open:grid group-open:grid-cols-4 group-open:gap-2">
+                    {TIME_SLOTS.map((slot) => {
+                      const id = `start-${slot}`;
+                      const isSelected = formState.start === slot;
+                      return (
+                        <label
+                          key={id}
+                          htmlFor={id}
+                          className={cn(
+                            "cursor-pointer rounded-md border px-3 py-2 text-center text-xs font-semibold transition",
+                            isSelected
+                              ? "border-blue-500 bg-blue-50 text-blue-700 shadow"
+                              : "border-slate-300 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50/80"
+                          )}
+                        >
+                          <input
+                            id={id}
+                            type="radio"
+                            name="start"
+                            value={slot}
+                            checked={isSelected}
+                            onChange={handleFieldChange}
+                            className="sr-only"
+                          />
+                          {slot}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </details>
+              </div>
+              <div className="flex flex-col gap-2 text-sm font-semibold text-slate-700">
+                <span>終了</span>
+                <details
+                  ref={endDetailsRef}
+                  className="group relative"
+                  onToggle={(event) => {
+                    if (event.currentTarget.open) {
+                      startDetailsRef.current?.removeAttribute("open");
+                    }
+                  }}
+                >
+                  <summary
+                    className="flex w-full list-none items-center justify-between rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-200 hover:bg-blue-50/80 focus:outline-none focus:ring-2 focus:ring-blue-200 [&::-webkit-details-marker]:hidden"
+                  >
+                    <span>{formState.end}</span>
+                    <span className="text-xs text-slate-500">変更</span>
+                  </summary>
+                  <div className="absolute left-0 top-full z-30 mt-2 hidden w-[min(360px,calc(100vw-5rem))] rounded-lg border border-slate-200 bg-white p-3 shadow-xl group-open:grid group-open:grid-cols-4 group-open:gap-2">
+                    {TIME_SLOTS.map((slot) => {
+                      const id = `end-${slot}`;
+                      const isSelected = formState.end === slot;
+                      return (
+                        <label
+                          key={id}
+                          htmlFor={id}
+                          className={cn(
+                            "cursor-pointer rounded-md border px-3 py-2 text-center text-xs font-semibold transition",
+                            isSelected
+                              ? "border-blue-500 bg-blue-50 text-blue-700 shadow"
+                              : "border-slate-300 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50/80"
+                          )}
+                        >
+                          <input
+                            id={id}
+                            type="radio"
+                            name="end"
+                            value={slot}
+                            checked={isSelected}
+                            onChange={handleFieldChange}
+                            className="sr-only"
+                          />
+                          {slot}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </details>
+              </div>
+            </div>
+            <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+              <input
+                type="checkbox"
+                name="isCompanyWide"
+                checked={formState.isCompanyWide}
+                onChange={handleFieldChange}
+                className="size-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+              />
+              全社共有として表示する
+            </label>
             <div className="space-y-2">
               <label className="flex flex-col gap-1 text-sm font-semibold text-slate-700">
                 件名
@@ -730,90 +905,6 @@ function CreateBookingModal({
                 />
               </label>
             </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <label className="flex flex-col gap-1 text-sm font-semibold text-slate-700">
-                会議室
-                <select
-                  name="room"
-                  value={formState.room}
-                  onChange={handleFieldChange}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                >
-                  {rooms.map((room) => (
-                    <option key={room} value={room}>
-                      {room}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="flex flex-col gap-1 text-sm font-semibold text-slate-700">
-                部署
-                <select
-                  name="department"
-                  value={formState.department}
-                  onChange={handleFieldChange}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                >
-                  {departments.map((department) => (
-                    <option key={department} value={department}>
-                      {department}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <label className="flex flex-col gap-1 text-sm font-semibold text-slate-700">
-                日付
-                <input
-                  type="date"
-                  name="date"
-                  value={formState.date}
-                  onChange={handleFieldChange}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                />
-              </label>
-              <label className="flex flex-col gap-1 text-sm font-semibold text-slate-700">
-                開始
-                <select
-                  name="start"
-                  value={formState.start}
-                  onChange={handleFieldChange}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                >
-                  {TIME_SLOTS.map((slot) => (
-                    <option key={`start-${slot}`} value={slot}>
-                      {slot}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="flex flex-col gap-1 text-sm font-semibold text-slate-700">
-                終了
-                <select
-                  name="end"
-                  value={formState.end}
-                  onChange={handleFieldChange}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                >
-                  {TIME_SLOTS.map((slot) => (
-                    <option key={`end-${slot}`} value={slot}>
-                      {slot}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-              <input
-                type="checkbox"
-                name="isCompanyWide"
-                checked={formState.isCompanyWide}
-                onChange={handleFieldChange}
-                className="size-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-              />
-              全社共有として表示する
-            </label>
             <label className="flex flex-col gap-1 text-sm font-semibold text-slate-700">
               メモ
               <textarea
@@ -828,26 +919,34 @@ function CreateBookingModal({
           </section>
           <section className="space-y-3">
             <h3 className="text-sm font-semibold text-slate-700">
-              {monthDayFormatter.format(selectedDate)} の予約状況
+              {monthDayFormatter.format(formDate)} の予約状況
             </h3>
-            <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
-              {dailyBookings.length === 0 && <p>登録済みの予約はありません。</p>}
+            <div className="space-y-2">
+              {dailyBookings.length === 0 && (
+                <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                  登録済みの予約はありません。
+                </p>
+              )}
               {dailyBookings.map((booking) => (
                 <div
-                  key={`timeline-${booking.id}`}
-                  className="flex items-start justify-between gap-2 rounded-md bg-white px-2 py-1 shadow-sm"
+                  key={`modal-booking-${booking.id}`}
+                  className="space-y-1 rounded-lg border border-slate-200 bg-white p-3 shadow-sm"
                 >
-                  <div className="space-y-0.5">
-                    <div className="font-semibold" style={{ color: booking.color }}>
-                      {booking.title}
-                    </div>
-                    <div className="text-[11px] text-slate-500">
-                      {formatMinutes(booking.startMinutes)}〜{formatMinutes(booking.endMinutes)} / {booking.room}
-                    </div>
+                  <div
+                    className="truncate rounded-md px-2 py-1 text-xs font-semibold"
+                    style={{ backgroundColor: booking.color, color: booking.textColor }}
+                  >
+                    {booking.title}
                   </div>
-                  <span className="text-[10px] font-medium text-slate-500">
-                    {booking.department}
-                  </span>
+                  <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
+                    <span>
+                      {formatMinutes(booking.startMinutes)}〜{formatMinutes(booking.endMinutes)}
+                    </span>
+                    <span aria-hidden>•</span>
+                    <span>{booking.room}</span>
+                    <span aria-hidden>•</span>
+                    <span>{booking.department}</span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -1062,7 +1161,25 @@ function endOfMonth(date: Date) {
 function startOfWeek(date: Date) {
   const cloned = stripTime(date);
   const day = cloned.getDay();
-  return addDays(cloned, -day);
+  const diff = (day + 6) % 7;
+  return addDays(cloned, -diff);
+}
+
+function endOfWorkWeek(date: Date) {
+  const cloned = stripTime(date);
+  const day = cloned.getDay();
+  if (day === 6) {
+    return addDays(cloned, -1);
+  }
+  if (day === 0) {
+    return addDays(cloned, -2);
+  }
+  return addDays(cloned, 5 - day);
+}
+
+function isWeekday(date: Date) {
+  const day = date.getDay();
+  return day >= 1 && day <= 5;
 }
 
 function isSameDay(a: Date, b: Date) {
@@ -1078,6 +1195,11 @@ function toDateKey(date: Date) {
   const month = `${date.getMonth() + 1}`.padStart(2, "0");
   const day = `${date.getDate()}`.padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+function fromDateKey(key: string) {
+  const [year, month, day] = key.split("-").map(Number);
+  return stripTime(new Date(year, (month ?? 1) - 1, day ?? 1));
 }
 
 function formatMinutes(totalMinutes: number) {
