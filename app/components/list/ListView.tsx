@@ -30,11 +30,10 @@ export function ListView({ bookings, onBookingClick }: ListViewProps) {
       <table className="min-w-[720px] w-full divide-y divide-slate-200 text-sm">
         <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
           <tr>
-            <th scope="col" className="px-4 py-3 text-left">件名</th>
-            <th scope="col" className="px-4 py-3 text-left">部署 / 会議室</th>
             <th scope="col" className="px-4 py-3 text-left">日時</th>
+            <th scope="col" className="px-4 py-3 text-left">件名</th>
+            <th scope="col" className="px-4 py-3 text-left">部署</th>
             <th scope="col" className="px-4 py-3 text-left">担当</th>
-            <th scope="col" className="px-4 py-3 text-left">属性</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-200 text-slate-700">
@@ -49,32 +48,19 @@ export function ListView({ bookings, onBookingClick }: ListViewProps) {
                 onKeyDown={(event) => handleRowKeyDown(event, booking)}
                 className="cursor-pointer transition hover:bg-slate-50 focus:outline-none focus-visible:bg-blue-50 focus-visible:ring-2 focus-visible:ring-blue-400"
               >
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <span
-                      className="inline-flex h-2.5 w-2.5 flex-none rounded-full"
-                      style={{ backgroundColor: booking.color }}
-                      aria-hidden
-                    />
-                    <span className="font-semibold" style={{ color: booking.color }}>
-                      {booking.title}
-                    </span>
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-xs text-slate-500">
-                  {booking.department} / {booking.room}
-                </td>
                 <td className="px-4 py-3 text-xs text-slate-500">{scheduleLabel}</td>
-                <td className="px-4 py-3 text-xs text-slate-500">{booking.owner}</td>
-                <td className="px-4 py-3 text-xs text-slate-500">
-                  {booking.isCompanyWide ? (
-                    <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 font-semibold text-blue-700">
-                      全社共有
-                    </span>
-                  ) : (
-                    <span className="text-slate-400">-</span>
-                  )}
+                <td className="px-4 py-3">
+                  <span className="font-semibold text-slate-800">{booking.title}</span>
                 </td>
+                <td className="px-4 py-3 text-xs">
+                  <span
+                    className="inline-flex items-center rounded-full px-2 py-0.5 font-semibold"
+                    style={{ backgroundColor: booking.color, color: booking.textColor }}
+                  >
+                    {booking.departmentName}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-xs text-slate-500">{booking.ownerName}</td>
               </tr>
             );
           })}
