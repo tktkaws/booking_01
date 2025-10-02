@@ -33,6 +33,18 @@ export function ReservationDetailModal({ open, booking, onClose }: ReservationDe
     if (!dialog) {
       return;
     }
+    const handleBackdropClick = (event: MouseEvent) => {
+      const rect = dialog.getBoundingClientRect();
+      const isInDialog =
+        event.clientX >= rect.left &&
+        event.clientX <= rect.right &&
+        event.clientY >= rect.top &&
+        event.clientY <= rect.bottom;
+      if (!isInDialog) {
+        event.preventDefault();
+        onClose();
+      }
+    };
     const handleCancel = (event: Event) => {
       event.preventDefault();
       onClose();
@@ -40,9 +52,11 @@ export function ReservationDetailModal({ open, booking, onClose }: ReservationDe
     const handleClose = () => {
       onClose();
     };
+    dialog.addEventListener("mousedown", handleBackdropClick);
     dialog.addEventListener("cancel", handleCancel);
     dialog.addEventListener("close", handleClose);
     return () => {
+      dialog.removeEventListener("mousedown", handleBackdropClick);
       dialog.removeEventListener("cancel", handleCancel);
       dialog.removeEventListener("close", handleClose);
     };
@@ -65,16 +79,14 @@ export function ReservationDetailModal({ open, booking, onClose }: ReservationDe
   return (
     <dialog
       ref={dialogRef}
-      className="w-[min(520px,90vw)] rounded-xl border border-slate-200 bg-white p-0 text-slate-900 shadow-2xl backdrop:bg-slate-900/60"
+      className="fixed left-1/2 top-1/2 max-h-[80vh] w-[min(520px,90vw)] -translate-x-1/2 -translate-y-1/2 transform overflow-hidden rounded-xl border border-slate-200 bg-white p-0 text-slate-900 shadow-2xl backdrop:bg-slate-900/60"
     >
-      <div className="flex flex-col">
+      <div className="flex max-h-[80vh] flex-col">
         <header className="flex items-start justify-between border-b border-slate-200 px-6 py-4">
           <div className="space-y-1">
             <h2 className="text-lg font-semibold">{booking.title}</h2>
             <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-              <span>{booking.department}</span>
-              <span aria-hidden>•</span>
-              <span>{booking.room}</span>
+              <span>{booking.departmentName}</span>
             </div>
           </div>
           <button
@@ -86,7 +98,7 @@ export function ReservationDetailModal({ open, booking, onClose }: ReservationDe
             閉じる
           </button>
         </header>
-        <div className="space-y-4 px-6 py-6 text-sm text-slate-700">
+        <div className="space-y-4 overflow-y-auto px-6 py-6 text-sm text-slate-700">
           <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
             <div className="text-xs font-semibold text-slate-500">日時</div>
             <div className="mt-1 font-medium text-slate-800">{scheduleLabel}</div>
@@ -94,11 +106,11 @@ export function ReservationDetailModal({ open, booking, onClose }: ReservationDe
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="rounded-lg border border-slate-200 px-4 py-3">
               <div className="text-xs font-semibold text-slate-500">担当者</div>
-              <div className="mt-1 font-medium text-slate-800">{booking.owner}</div>
+              <div className="mt-1 font-medium text-slate-800">{booking.ownerName}</div>
             </div>
             <div className="rounded-lg border border-slate-200 px-4 py-3">
               <div className="text-xs font-semibold text-slate-500">部署</div>
-              <div className="mt-1 font-medium text-slate-800">{booking.department}</div>
+              <div className="mt-1 font-medium text-slate-800">{booking.departmentName}</div>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3 text-xs">

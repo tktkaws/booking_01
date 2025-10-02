@@ -25,7 +25,6 @@ type CreateBookingModalProps = {
   onClose: () => void;
   selectedDate: Date;
   bookingsByDate: BookingsByDate;
-  rooms: string[];
   departments: string[];
 };
 
@@ -34,7 +33,6 @@ export function CreateBookingModal({
   onClose,
   selectedDate,
   bookingsByDate,
-  rooms,
   departments,
 }: CreateBookingModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -46,7 +44,6 @@ export function CreateBookingModal({
   const initialFormState = useMemo(() => {
     return {
       title: "",
-      room: rooms[0] ?? "A-101",
       department: departments[0] ?? "所属未設定",
       date: dateKey,
       start: "09:00",
@@ -54,7 +51,7 @@ export function CreateBookingModal({
       isCompanyWide: false,
       description: "",
     };
-  }, [rooms, departments, dateKey]);
+  }, [departments, dateKey]);
 
   const [formState, setFormState] = useState(initialFormState);
 
@@ -85,6 +82,18 @@ export function CreateBookingModal({
     if (!dialog) {
       return;
     }
+    const handleBackdropClick = (event: MouseEvent) => {
+      const rect = dialog.getBoundingClientRect();
+      const isInDialog =
+        event.clientX >= rect.left &&
+        event.clientX <= rect.right &&
+        event.clientY >= rect.top &&
+        event.clientY <= rect.bottom;
+      if (!isInDialog) {
+        event.preventDefault();
+        onClose();
+      }
+    };
     const handleCancel = (event: Event) => {
       event.preventDefault();
       onClose();
@@ -92,9 +101,11 @@ export function CreateBookingModal({
     const handleClose = () => {
       onClose();
     };
+    dialog.addEventListener("mousedown", handleBackdropClick);
     dialog.addEventListener("cancel", handleCancel);
     dialog.addEventListener("close", handleClose);
     return () => {
+      dialog.removeEventListener("mousedown", handleBackdropClick);
       dialog.removeEventListener("cancel", handleCancel);
       dialog.removeEventListener("close", handleClose);
     };
@@ -313,9 +324,7 @@ export function CreateBookingModal({
                       {formatMinutes(booking.startMinutes)}〜{formatMinutes(booking.endMinutes)}
                     </span>
                     <span aria-hidden>•</span>
-                    <span>{booking.room}</span>
-                    <span aria-hidden>•</span>
-                    <span>{booking.department}</span>
+                    <span>{booking.departmentName}</span>
                   </div>
                 </div>
               ))}
