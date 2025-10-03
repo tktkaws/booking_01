@@ -18,6 +18,7 @@ import {
   parseDateOnly,
   parseIso,
   startOfWeek,
+  toDateKey,
   stripTime,
   WORKING_DAY_COUNT,
 } from "@/lib/calendar";
@@ -57,10 +58,19 @@ export default function Home() {
   };
 
   const [rawBookings, setRawBookings] = useState<Booking[]>([]);
+  const [isAuthed, setIsAuthed] = useState(false);
 
   // Supabase から予約を取得
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
+    // 認証状態を監視
+    supabase.auth.getSession().then(({ data }) => {
+      setIsAuthed(!!data.session);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthed(!!session);
+    });
+
     const toLocalIsoHM = (iso: string) => {
       const d = new Date(iso);
       const y = d.getFullYear();
@@ -92,6 +102,9 @@ export default function Home() {
         }));
         setRawBookings(converted);
       });
+    return () => {
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   const bookings = useMemo<ParsedBooking[]>(() => {
@@ -183,12 +196,53 @@ export default function Home() {
       });
   }, []);
 
+  const VIEW_STORAGE_KEY = "booking_view";
   const [view, setView] = useState<ViewType>("month");
+
+  // マウント時にハッシュ or 保存値からビューを復元
+  useEffect(() => {
+    try {
+      const hash = window.location.hash.replace('#', '');
+      if (hash === "month" || hash === "week" || hash === "list") {
+        setView(hash as ViewType);
+        if (hash === "list") setSelectedDate(null);
+        return;
+      }
+      const stored = localStorage.getItem(VIEW_STORAGE_KEY);
+      if (stored === "month" || stored === "week" || stored === "list") {
+        setView(stored as ViewType);
+        if (stored === "list") setSelectedDate(null);
+      }
+    } catch {}
+  }, []);
+
+  // ビュー変更を保存
+  useEffect(() => {
+    try {
+      localStorage.setItem(VIEW_STORAGE_KEY, view);
+    } catch {}
+  }, [view]);
+
+  // ハッシュ変更を監視してビューを同期
+  useEffect(() => {
+    const onHash = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash === "month" || hash === "week" || hash === "list") {
+        setView(hash as ViewType);
+        if (hash === "list") setSelectedDate(null);
+      }
+    };
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
   const [focusDate, setFocusDate] = useState<Date>(() => stripTime(new Date()));
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [detailBooking, setDetailBooking] = useState<ParsedBooking | null>(null);
+  // List view filter (start/end). Default: start=today, end=unset (all future)
+  const [listFilterFrom, setListFilterFrom] = useState<Date>(() => stripTime(new Date()));
+  const [listFilterTo, setListFilterTo] = useState<Date | null>(null);
 
   const weekReferenceDate = selectedDate ?? focusDate;
 
@@ -205,27 +259,31 @@ export default function Home() {
   }, [focusDate, view, weekReferenceDate]);
 
   const handlePrev = () => {
-    setFocusDate((current) => {
-      if (view === "month") {
-        return addMonths(current, -1);
-      }
-      return addDays(current, -7);
-    });
+    if (view === "month") {
+      setFocusDate(addMonths(focusDate, -1));
+    } else {
+      const next = addDays(focusDate, -7);
+      setFocusDate(next);
+      setSelectedDate(next);
+    }
   };
 
   const handleNext = () => {
-    setFocusDate((current) => {
-      if (view === "month") {
-        return addMonths(current, 1);
-      }
-      return addDays(current, 7);
-    });
+    if (view === "month") {
+      setFocusDate(addMonths(focusDate, 1));
+    } else {
+      const next = addDays(focusDate, 7);
+      setFocusDate(next);
+      setSelectedDate(next);
+    }
   };
 
   const handleToday = () => {
     const today = stripTime(new Date());
     setFocusDate(today);
     setSelectedDate(today);
+    setListFilterFrom(today);
+    setListFilterTo(null);
   };
 
   const handleSelectDate = (date: Date) => {
@@ -235,10 +293,13 @@ export default function Home() {
   };
 
   const handleViewChange = (nextView: ViewType) => {
+    try {
+      if (window.location.hash !== `#${nextView}`) {
+        window.location.hash = `#${nextView}`;
+      }
+    } catch {}
     setView(nextView);
-    if (nextView === "list") {
-      setSelectedDate(null);
-    }
+    if (nextView === "list") setSelectedDate(null);
   };
 
   const handleOpenCreateModal = (date?: Date) => {
@@ -275,15 +336,21 @@ export default function Home() {
 
   const modalDate = selectedDate ?? focusDate;
 
+  // List view: filtered bookings from selected from-date
+  const filteredListBookings = useMemo(() => {
+    const upper = listFilterTo ? addDays(listFilterTo, 1) : null; // inclusive end
+    return sortedBookings.filter((b) => {
+      const afterStart = b.startDate >= listFilterFrom;
+      const beforeEnd = upper ? b.startDate < upper : true;
+      return afterStart && beforeEnd;
+    });
+  }, [sortedBookings, listFilterFrom, listFilterTo]);
+
   return (
     <div className="min-h-screen bg-slate-100">
       <header className="mb-8 px-6 pt-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">
-            予約
-          </h1>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+          <h1 className="text-2xl font-semibold text-slate-900">予約</h1>
           <div className="flex flex-wrap gap-2">
             {VIEW_OPTIONS.map(({ key, label }) => (
               <button
@@ -301,8 +368,8 @@ export default function Home() {
               </button>
             ))}
           </div>
-          <AuthButton />
         </div>
+        <div className="flex items-center"><AuthButton /></div>
       </header>
       <main className={mainClassName}>
 
@@ -313,38 +380,93 @@ export default function Home() {
           )}
         >
           <div className="flex flex-col-reverse gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handlePrev}
-                className="rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-600 hover:border-slate-400"
-              >
-                前へ
-              </button>
-              <button
-                type="button"
-                onClick={handleToday}
-                className="rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-600 hover:border-slate-400"
-              >
-                今日
-              </button>
-              <button
-                type="button"
-                onClick={handleNext}
-                className="rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-600 hover:border-slate-400"
-              >
-                次へ
-              </button>
-            </div>
+            {view !== "list" && (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handlePrev}
+                  className="rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-600 hover:border-slate-400"
+                >
+                  前へ
+                </button>
+                <button
+                  type="button"
+                  onClick={handleToday}
+                  className="rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-600 hover:border-slate-400"
+                >
+                  今日
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  className="rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-600 hover:border-slate-400"
+                >
+                  次へ
+                </button>
+              </div>
+            )}
             <div className="flex flex-wrap items-center gap-3">
-              <div className="text-lg font-semibold text-slate-700">{viewLabel}</div>
-              <button
-                type="button"
-                onClick={() => handleOpenCreateModal()}
-                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
-              >
-                予約を作成
-              </button>
+              <div className="text-lg font-semibold text-slate-700" suppressHydrationWarning>
+                {viewLabel}
+                {view === "list" && (
+                  <span className="ml-2 text-xs text-slate-500">
+                    （{toDateKey(listFilterFrom)}
+                    {listFilterTo ? `〜${toDateKey(listFilterTo)}` : "以降"}）
+                  </span>
+                )}
+              </div>
+              {view === "list" && (
+                <div className="flex flex-wrap items-center gap-2 text-sm">
+                  <label className="flex items-center gap-1">
+                    <span className="text-xs text-slate-500">開始</span>
+                    <input
+                      type="date"
+                      value={toDateKey(listFilterFrom)}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v) setListFilterFrom(parseDateOnly(`${v}T00:00:00+00:00`));
+                      }}
+                      className="rounded border border-slate-300 bg-white px-3 py-2"
+                    />
+                  </label>
+                  <label className="flex items-center gap-1">
+                    <span className="text-xs text-slate-500">終了</span>
+                    <input
+                      type="date"
+                      value={listFilterTo ? toDateKey(listFilterTo) : ""}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v) setListFilterTo(parseDateOnly(`${v}T00:00:00+00:00`));
+                        else setListFilterTo(null);
+                      }}
+                      className="rounded border border-slate-300 bg-white px-3 py-2"
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleToday}
+                    className="rounded border border-slate-300 bg-white px-3 py-2 text-slate-600 hover:border-slate-400"
+                  >
+                    今日以降
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setListFilterTo(null)}
+                    className="rounded border border-slate-300 bg-white px-3 py-2 text-slate-600 hover:border-slate-400"
+                  >
+                    終了なし
+                  </button>
+                </div>
+              )}
+              {isAuthed && (
+                <button
+                  type="button"
+                  onClick={() => handleOpenCreateModal()}
+                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+                >
+                  予約を作成
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -369,10 +491,7 @@ export default function Home() {
         )}
         {view === "list" && (
           <div className="mx-auto w-full max-w-[1200px]">
-            <ListView
-              bookings={sortedBookings}
-              onBookingClick={handleOpenDetail}
-            />
+            <ListView bookings={filteredListBookings} onBookingClick={handleOpenDetail} />
           </div>
         )}
       </main>
