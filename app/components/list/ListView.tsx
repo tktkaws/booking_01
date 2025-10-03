@@ -54,7 +54,7 @@ export function ListView({ bookings, onBookingClick }: ListViewProps) {
                 </td>
                 <td className="px-4 py-3 text-xs">
                   <span
-                    className="inline-flex items-center rounded-full px-2 py-0.5 font-semibold"
+                    className="inline-flex items-center px-2 py-0.5 font-semibold rounded-md"
                     style={{ backgroundColor: booking.color, color: booking.textColor }}
                   >
                     {booking.departmentName}
