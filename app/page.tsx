@@ -1,16 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { MonthView } from "@/components/calendar/MonthView";
 import { WeekView } from "@/components/calendar/WeekView";
 import { ListView } from "@/components/list/ListView";
 import { CreateBookingModal } from "@/components/modal/CreateBookingModal";
 import { ReservationDetailModal } from "@/components/modal/ReservationDetailModal";
+import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { AuthButton } from "@/components/auth/AuthButton";
-import bookingsRaw from "@/data/bookings.json";
-import departmentsRaw from "@/data/departments.json";
-import usersRaw from "@/data/users.json";
+// Supabase から profiles/departments を取得して表示用に利用
 import {
   addDays,
   addMonths,
@@ -39,18 +38,9 @@ const VIEW_OPTIONS: ReadonlyArray<{ key: ViewType; label: string }> = [
 ];
 
 export default function Home() {
-  const departments = useMemo(() => departmentsRaw as Department[], []);
-  const users = useMemo(() => usersRaw as User[], []);
-  const depMap = useMemo(() => {
-    const m = new Map<string, Department>();
-    departments.forEach((d) => m.set(d.id, d));
-    return m;
-  }, [departments]);
-  const userMap = useMemo(() => {
-    const m = new Map<string, User>();
-    users.forEach((u) => m.set(u.id, u));
-    return m;
-  }, [users]);
+  const [depMap, setDepMap] = useState<Map<string, Department>>(new Map());
+  const [profileMap, setProfileMap] = useState<Map<string, { display_name: string; department_id: string; department_name?: string }>>(new Map());
+  const [departmentNames, setDepartmentNames] = useState<string[]>([]);
 
   const getTextColor = (hex: string): string => {
     const h = hex.replace('#','');
@@ -66,18 +56,58 @@ export default function Home() {
     return L < 0.5 ? '#ffffff' : '#1f2937';
   };
 
+  const [rawBookings, setRawBookings] = useState<Booking[]>([]);
+
+  // Supabase から予約を取得
+  useEffect(() => {
+    const supabase = getSupabaseBrowserClient();
+    const toLocalIsoHM = (iso: string) => {
+      const d = new Date(iso);
+      const y = d.getFullYear();
+      const m = `${d.getMonth() + 1}`.padStart(2, "0");
+      const da = `${d.getDate()}`.padStart(2, "0");
+      const hh = `${d.getHours()}`.padStart(2, "0");
+      const mm = `${d.getMinutes()}`.padStart(2, "0");
+      return `${y}-${m}-${da}T${hh}:${mm}+00:00`;
+    };
+
+    supabase
+      .from("bookings")
+      .select("id, title, description, start_at, end_at, created_by")
+      .order("start_at", { ascending: true })
+      .then(({ data, error }) => {
+        if (error) {
+          console.warn("failed to fetch bookings", error.message);
+          return;
+        }
+        const converted: Booking[] = (data ?? []).map((row: any) => ({
+          id: String(row.id),
+          title: row.title,
+          departmentId: "", // 部署は未使用/不明のため空（色はデフォルト）
+          ownerUserId: row.created_by ?? "",
+          start: toLocalIsoHM(row.start_at),
+          end: toLocalIsoHM(row.end_at),
+          isCompanyWide: false,
+          description: row.description ?? "",
+        }));
+        setRawBookings(converted);
+      });
+  }, []);
+
   const bookings = useMemo<ParsedBooking[]>(() => {
-    return (bookingsRaw as Booking[]).map((booking) => {
+    return rawBookings.map((booking) => {
       const startMeta = parseIso(booking.start);
       const endMeta = parseIso(booking.end);
-      const dep = depMap.get(booking.departmentId);
-      const user = userMap.get(booking.ownerUserId);
+      const profile = profileMap.get(booking.ownerUserId);
+      const departmentId = profile?.department_id ?? booking.departmentId;
+      const dep = departmentId ? depMap.get(departmentId) : undefined;
       const color = dep?.default_color ?? '#64748b';
       const textColor = getTextColor(color);
       return {
         ...booking,
-        departmentName: dep?.name ?? booking.departmentId,
-        ownerName: user?.display_name ?? booking.ownerUserId,
+        departmentId: departmentId ?? "",
+        departmentName: profile?.department_name ?? dep?.name ?? (departmentId ?? ""),
+        ownerName: profile?.display_name ?? booking.ownerUserId,
         color,
         textColor,
         startDate: startMeta.date,
@@ -88,7 +118,7 @@ export default function Home() {
         endMinutes: endMeta.minutes,
       } as ParsedBooking;
     });
-  }, [depMap, userMap]);
+  }, [depMap, profileMap, rawBookings]);
 
   const bookingsByDate = useMemo<BookingsByDate>(() => {
     const map = new Map<string, ParsedBooking[]>();
@@ -110,21 +140,52 @@ export default function Home() {
     );
   }, [bookings]);
 
-  // room フィールドは廃止のため未使用
-
-  const departmentNames = useMemo(() => {
-    return departments.map((d) => d.name);
-  }, [departments]);
+  // Supabase から profiles_public / departments を取得
+  useEffect(() => {
+    const supabase = getSupabaseBrowserClient();
+    // 部署
+    supabase
+      .from("departments")
+      .select("id,name,default_color")
+      .order("name", { ascending: true })
+      .then(({ data, error }) => {
+        if (error) {
+          console.warn("failed to fetch departments", error.message);
+          return;
+        }
+        const m = new Map<string, Department>();
+        const names: string[] = [];
+        (data ?? []).forEach((d: any) => {
+          m.set(String(d.id), { id: String(d.id), name: d.name, default_color: d.default_color });
+          names.push(d.name as string);
+        });
+        setDepMap(m);
+        setDepartmentNames(names);
+      });
+    // プロファイル（公開ビュー推奨）
+    supabase
+      .from("profiles_public")
+      .select("id, display_name, department_id, department_name")
+      .then(({ data, error }) => {
+        if (error) {
+          console.warn("failed to fetch profiles_public", error.message);
+          return;
+        }
+        const m = new Map<string, { display_name: string; department_id: string; department_name?: string }>();
+        (data ?? []).forEach((row: any) => {
+          m.set(String(row.id), {
+            display_name: row.display_name,
+            department_id: row.department_id ?? "",
+            department_name: row.department_name ?? undefined,
+          });
+        });
+        setProfileMap(m);
+      });
+  }, []);
 
   const [view, setView] = useState<ViewType>("month");
-  const [focusDate, setFocusDate] = useState<Date>(() => {
-    const firstIso = (bookingsRaw as Booking[])[0]?.start;
-    return firstIso ? parseDateOnly(firstIso) : stripTime(new Date());
-  });
-  const [selectedDate, setSelectedDate] = useState<Date | null>(() => {
-    const firstIso = (bookingsRaw as Booking[])[0]?.start;
-    return firstIso ? parseDateOnly(firstIso) : null;
-  });
+  const [focusDate, setFocusDate] = useState<Date>(() => stripTime(new Date()));
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [detailBooking, setDetailBooking] = useState<ParsedBooking | null>(null);
