@@ -37,9 +37,9 @@ import {
 } from "@/types/bookings";
 
 const BASE_VIEW_OPTIONS: ReadonlyArray<{ key: ViewType; label: string }> = [
-  { key: "month", label: "月間ビュー" },
-  { key: "week", label: "週間ビュー" },
-  { key: "list", label: "リストビュー" },
+  { key: "month", label: "月" },
+  { key: "week", label: "週" },
+  { key: "list", label: "リスト" },
 ];
 
 export default function Home() {
@@ -456,11 +456,11 @@ export default function Home() {
     <div className="min-h-screen bg-slate-100">
       <header className="mb-8 px-6 pt-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-          <h1 className="text-2xl font-semibold text-slate-900">📅予約</h1>
+          <h1 className="text-2xl font-semibold text-slate-900">📅</h1>
           <div className="flex flex-wrap gap-2">
             {(
               isAdmin
-                ? [...BASE_VIEW_OPTIONS, { key: "users" as ViewType, label: "ユーザー一覧" }, { key: "departments" as ViewType, label: "部署一覧" }]
+                ? [...BASE_VIEW_OPTIONS, { key: "users" as ViewType, label: "ユーザー" }, { key: "departments" as ViewType, label: "部署" }]
                 : BASE_VIEW_OPTIONS
             ).map(({ key, label }) => (
               <button
@@ -468,7 +468,7 @@ export default function Home() {
                 type="button"
                 onClick={() => handleViewChange(key)}
                 className={cn(
-                  "rounded-full border px-4 py-2 text-sm font-medium transition-colors",
+                  "rounded border px-4 py-2 text-sm font-medium transition-colors",
                   view === key
                     ? "border-blue-500 bg-blue-500 text-white"
                     : "border-slate-300 bg-white text-slate-600 hover:border-slate-400"
@@ -515,16 +515,7 @@ export default function Home() {
                 </button>
               </div>
             )}
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="text-lg font-semibold text-slate-700" suppressHydrationWarning>
-                {viewLabel}
-                {view === "list" && (
-                  <span className="ml-2 text-xs text-slate-500">
-                    （{toDateKey(listFilterFrom)}
-                    {listFilterTo ? `〜${toDateKey(listFilterTo)}` : "以降"}）
-                  </span>
-                )}
-              </div>
+              
               {view === "list" && (
                 <div className="flex flex-wrap items-center gap-2 text-sm">
                   <label className="flex items-center gap-1">
@@ -552,32 +543,17 @@ export default function Home() {
                       className="rounded border border-slate-300 bg-white px-3 py-2"
                     />
                   </label>
-                  <button
-                    type="button"
-                    onClick={handleToday}
-                    className="rounded border border-slate-300 bg-white px-3 py-2 text-slate-600 hover:border-slate-400"
-                  >
-                    今日以降
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setListFilterTo(null)}
-                    className="rounded border border-slate-300 bg-white px-3 py-2 text-slate-600 hover:border-slate-400"
-                  >
-                    終了なし
-                  </button>
                 </div>
               )}
               {isAuthed && (
                 <button
                   type="button"
                   onClick={() => handleOpenCreateModal()}
-                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+                  className="ml-auto rounded-md bg-blue-500 px-4 py-2 text-sm font-semibold text-white shadow-sm"
                 >
                   予約を作成
                 </button>
               )}
-            </div>
           </div>
         </div>
         {view === "month" && (
