@@ -601,7 +601,7 @@ export default function Home() {
           />
         )}
         {view === "list" && (
-          <div className="mx-auto w-full max-w-[1200px]">
+          <div className="mx-auto w-full max-w-[1200px] overflow-hidden">
             <ListView bookings={filteredListBookings} onBookingClick={handleOpenDetail} />
           </div>
         )}

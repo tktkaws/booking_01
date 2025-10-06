@@ -78,37 +78,38 @@ export function WeekView({
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div className="grid grid-cols-[90px_repeat(5,minmax(0,1fr))] border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600">
-        <div className="px-3 py-3 text-right">時間</div>
-        {weekDays.map((day) => (
-          <button
-            key={day.toISOString()}
-            type="button"
-            onClick={() => onSelectDate(day)}
-            tabIndex={-1}
-            className={cn(
-              "border-l border-slate-200 px-3 py-3 text-left transition",
-              selectedDate && isSameDay(day, selectedDate)
-                ? "bg-white text-blue-600"
-                : "bg-slate-50 hover:bg-slate-100"
-            )}
-          >
-            <div className="text-[11px] text-slate-500">
-              {weekdayLabelsFull[day.getDay()]}
+      <div className="grid grid-cols-[60px_repeat(5,minmax(0,1fr))] border-slate-200 text-xs font-semibold text-slate-600">
+        <div className="px-3 py-3 text-right"></div>
+        {weekDays.map((day) => {
+          const isToday = isSameDay(day, new Date());
+          return (
+            <div
+              key={day.toISOString()}
+              className="px-3 py-3 text-left flex items-baseline gap-2"
+            >
+              <div className="text-slate-500">{weekdayLabelsFull[day.getDay()]}</div>
+              <div className={cn("text-sm font-semibold", isToday ? "text-blue-600" : "text-slate-700")}
+                suppressHydrationWarning
+              >
+                {monthDayFormatter.format(day)}
+              </div>
             </div>
-            <div className="text-sm font-semibold">{monthDayFormatter.format(day)}</div>
-          </button>
-        ))}
+          );
+        })}
       </div>
-      <div className="grid grid-cols-[90px_repeat(5,minmax(0,1fr))]">
+      <div className="grid grid-cols-[60px_repeat(5,minmax(0,1fr))]">
         <div className="flex flex-col text-xs text-slate-500">
           {timeLabels.map((label, index) => (
             <div
               key={label + index}
-              className="flex items-start justify-end border-b border-slate-100 pr-2"
+              className="flex items-start justify-end pr-2"
               style={{ height: SLOT_HEIGHT_PX }}
             >
-              {index % 2 === 0 ? label : ""}
+              {index % 2 === 0 ? (
+                <span className="-mt-1.5 inline-block">{label}</span>
+              ) : (
+                ""
+              )}
             </div>
           ))}
         </div>
@@ -123,7 +124,7 @@ export function WeekView({
               style={{ height: slotCount * SLOT_HEIGHT_PX }}
             >
               {/* Bookings layer first in DOM for tab order; higher z-index */}
-              <div className="absolute inset-0 grid gap-1 px-1 py-1" style={columnStyle}>
+              <div className="absolute inset-0 grid" style={columnStyle}>
                 {dailyBookings.map((booking) => {
                   const range = calculateSlotRange(
                     booking,
@@ -134,6 +135,8 @@ export function WeekView({
                   if (!range) {
                     return null;
                   }
+                  const durationMinutes = booking.endMinutes - booking.startMinutes;
+                  const isSingleSlot = durationMinutes <= SLOT_INTERVAL_MINUTES;
                   return (
                     <div
                       key={booking.id}
@@ -141,17 +144,23 @@ export function WeekView({
                       tabIndex={0}
                       onClick={(event) => handleBookingBlockClick(event, booking)}
                       onKeyDown={(event) => handleBookingBlockKeyDown(event, booking)}
-                      className="z-10 pointer-events-auto overflow-hidden rounded-md px-2 py-1 text-xs font-semibold shadow-sm outline-none transition focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 focus-visible:ring-offset-white"
+                      className={cn(
+                        "z-10 pointer-events-auto h-full overflow-hidden rounded-md text-xs font-semibold shadow-sm outline-none transition focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 focus-visible:ring-offset-white mx-[1px]",
+                        isSingleSlot ? "px-1.5 py-0.5" : "px-2 py-1"
+                      )}
                       style={{
                         gridRow: `${range.start} / span ${range.span}`,
                         backgroundColor: booking.color,
                         color: booking.textColor,
+                        height: "calc(100% - 2px)",
                       }}
                     >
                       <div className="truncate">{booking.title}</div>
-                      <div className="text-[10px] opacity-80">
-                        {formatMinutes(booking.startMinutes)}〜{formatMinutes(booking.endMinutes)}
-                      </div>
+                      {!isSingleSlot && (
+                        <div className="text-[10px] opacity-80">
+                          {formatMinutes(booking.startMinutes)}〜{formatMinutes(booking.endMinutes)}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -171,10 +180,9 @@ export function WeekView({
                     }}
                     className={cn(
                       "border-b border-slate-100 text-left",
-                      index % 4 === 0 ? "bg-slate-50/80" : "bg-white",
+                      index % 2 === 0 ? "bg-slate-50/80" : "bg-white",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                     )}
-                    style={{ height: SLOT_HEIGHT_PX }}
                     aria-label={`${monthDayFormatter.format(day)} ${label} に予約を作成`}
                   />
                 ))}
