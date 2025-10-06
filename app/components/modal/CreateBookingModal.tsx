@@ -29,6 +29,7 @@ type CreateBookingModalProps = {
   departments: string[];
   mode?: "create" | "edit";
   initialBooking?: ParsedBooking | null;
+  initialStartHHMM?: string;
   onSaved?: () => void;
 };
 
@@ -40,6 +41,7 @@ export function CreateBookingModal({
   departments,
   mode = "create",
   initialBooking = null,
+  initialStartHHMM,
   onSaved,
 }: CreateBookingModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -63,16 +65,23 @@ export function CreateBookingModal({
         description: initialBooking.description ?? "",
       };
     }
+    const toMinutes = (hhmm: string) => {
+      const [h, m] = hhmm.split(":").map(Number);
+      return (h || 0) * 60 + (m || 0);
+    };
+    const baseStart = initialStartHHMM ?? "09:00";
+    const targetMin = toMinutes(baseStart) + 60;
+    const autoEnd = TIME_SLOTS.find((slot) => toMinutes(slot) >= targetMin) || "09:30";
     return {
       title: "",
       department: departments[0] ?? "所属未設定",
       date: dateKey,
-      start: "09:00",
-      end: "09:30",
+      start: baseStart,
+      end: autoEnd,
       isCompanyWide: false,
       description: "",
     };
-  }, [departments, dateKey, initialBooking, mode]);
+  }, [departments, dateKey, initialBooking, mode, initialStartHHMM]);
 
   const [formState, setFormState] = useState(initialFormState);
   const [hasConflict, setHasConflict] = useState(false);

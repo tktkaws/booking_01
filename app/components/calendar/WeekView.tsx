@@ -32,6 +32,7 @@ type WeekViewProps = {
   bookingsByDate: BookingsByDate;
   onSelectDate: (date: Date) => void;
   onBookingClick: (booking: ParsedBooking) => void;
+  onCreateRequest: (date: Date) => void;
 };
 
 export function WeekView({
@@ -40,6 +41,7 @@ export function WeekView({
   bookingsByDate,
   onSelectDate,
   onBookingClick,
+  onCreateRequest,
 }: WeekViewProps) {
   const weekStart = startOfWeek(referenceDate);
   const weekDays = Array.from({ length: WORKING_DAY_COUNT }).map((_, index) =>
@@ -83,6 +85,7 @@ export function WeekView({
             key={day.toISOString()}
             type="button"
             onClick={() => onSelectDate(day)}
+            tabIndex={-1}
             className={cn(
               "border-l border-slate-200 px-3 py-3 text-left transition",
               selectedDate && isSameDay(day, selectedDate)
@@ -119,17 +122,7 @@ export function WeekView({
               className="relative border-l border-slate-100"
               style={{ height: slotCount * SLOT_HEIGHT_PX }}
             >
-              <div className="absolute inset-0 grid" style={columnStyle}>
-                {timeLabels.map((_, index) => (
-                  <div
-                    key={`${dateKey}-slot-${index}`}
-                    className={cn(
-                      "border-b border-slate-100",
-                      index % 4 === 0 ? "bg-slate-50/80" : "bg-white"
-                    )}
-                  />
-                ))}
-              </div>
+              {/* Bookings layer first in DOM for tab order; higher z-index */}
               <div className="absolute inset-0 grid gap-1 px-1 py-1" style={columnStyle}>
                 {dailyBookings.map((booking) => {
                   const range = calculateSlotRange(
@@ -148,7 +141,7 @@ export function WeekView({
                       tabIndex={0}
                       onClick={(event) => handleBookingBlockClick(event, booking)}
                       onKeyDown={(event) => handleBookingBlockKeyDown(event, booking)}
-                      className="overflow-hidden rounded-md px-2 py-1 text-xs font-semibold shadow-sm outline-none transition focus:ring-2 focus:ring-white"
+                      className="z-10 pointer-events-auto overflow-hidden rounded-md px-2 py-1 text-xs font-semibold shadow-sm outline-none transition focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 focus-visible:ring-offset-white"
                       style={{
                         gridRow: `${range.start} / span ${range.span}`,
                         backgroundColor: booking.color,
@@ -162,6 +155,29 @@ export function WeekView({
                     </div>
                   );
                 })}
+              </div>
+              {/* Clickable time cells: behind bookings layer, tab after bookings */}
+              <div className="absolute inset-0 z-0 grid" style={columnStyle}>
+                {timeLabels.map((label, index) => (
+                  <button
+                    type="button"
+                    key={`${dateKey}-slot-${index}`}
+                    onClick={() => {
+                      const totalMinutes = DAY_START_MINUTES + index * SLOT_INTERVAL_MINUTES;
+                      const hours = Math.floor(totalMinutes / 60);
+                      const minutes = totalMinutes % 60;
+                      const slotDate = new Date(day.getFullYear(), day.getMonth(), day.getDate(), hours, minutes, 0, 0);
+                      onCreateRequest(slotDate);
+                    }}
+                    className={cn(
+                      "border-b border-slate-100 text-left",
+                      index % 4 === 0 ? "bg-slate-50/80" : "bg-white",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                    )}
+                    style={{ height: SLOT_HEIGHT_PX }}
+                    aria-label={`${monthDayFormatter.format(day)} ${label} に予約を作成`}
+                  />
+                ))}
               </div>
             </div>
           );
