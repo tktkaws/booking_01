@@ -1,4 +1,4 @@
-export type ViewType = "month" | "week" | "list";
+export type ViewType = "month" | "week" | "list" | "users" | "departments";
 
 export type Booking = {
   id: string;
