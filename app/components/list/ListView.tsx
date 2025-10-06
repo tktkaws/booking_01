@@ -26,46 +26,42 @@ export function ListView({ bookings, onBookingClick }: ListViewProps) {
   };
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
-      <table className="min-w-[720px] w-full divide-y divide-slate-200 text-sm">
-        <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
-          <tr>
-            <th scope="col" className="px-4 py-3 text-left">日時</th>
-            <th scope="col" className="px-4 py-3 text-left">件名</th>
-            <th scope="col" className="px-4 py-3 text-left">部署</th>
-            <th scope="col" className="px-4 py-3 text-left">担当</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-200 text-slate-700">
+    <div className="relative max-h-[calc(100vh-260px)] overflow-y-auto overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div className="min-w-[720px]">
+        <div className="sticky top-0 z-10 grid grid-cols-[250px_1fr_150px_150px] bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <div className="px-4 py-3 text-left">日時</div>
+          <div className="px-4 py-3 text-left">件名</div>
+          <div className="px-4 py-3 text-left">担当</div>
+          <div className="px-4 py-3 text-left">部署</div>
+        </div>
+        <div className="divide-y divide-slate-200">
           {bookings.map((booking) => {
             const scheduleLabel = `${fullDateFormatter.format(booking.startDate)} ${formatMinutes(booking.startMinutes)}〜${formatMinutes(booking.endMinutes)}`;
             return (
-              <tr
+              <div
                 key={booking.id}
                 role="button"
                 tabIndex={0}
                 onClick={() => handleRowClick(booking)}
                 onKeyDown={(event) => handleRowKeyDown(event, booking)}
-                className="cursor-pointer transition hover:bg-slate-50 focus:outline-none focus-visible:bg-blue-50 focus-visible:ring-2 focus-visible:ring-blue-400"
+                className="grid grid-cols-[250px_1fr_150px_150px] cursor-pointer transition hover:bg-slate-50 focus:outline-none focus-visible:bg-blue-50 focus-visible:ring-2 focus-visible:ring-blue-400"
               >
-                <td className="px-4 py-3 text-xs text-slate-500">{scheduleLabel}</td>
-                <td className="px-4 py-3">
-                  <span className="font-semibold text-slate-800">{booking.title}</span>
-                </td>
-                <td className="px-4 py-3 text-xs">
+                <div className="px-4 py-3 text-sm font-semibold text-slate-800">{scheduleLabel}</div>
+                <div className="px-4 py-3 text-sm font-semibold text-slate-800">{booking.title}</div>
+                <div className="px-4 py-3 text-sm font-semibold text-slate-800">{booking.ownerName}</div>
+                <div className="px-4 py-3">
                   <span
-                    className="inline-flex items-center px-2 py-0.5 font-semibold rounded-md"
+                    className="inline-flex items-center rounded-md px-2 py-0.5 text-sm font-semibold"
                     style={{ backgroundColor: booking.color, color: booking.textColor }}
                   >
                     {booking.departmentName}
                   </span>
-                </td>
-                <td className="px-4 py-3 text-xs text-slate-500">{booking.ownerName}</td>
-              </tr>
+                </div>
+              </div>
             );
           })}
-        </tbody>
-      </table>
+        </div>
+      </div>
     </div>
   );
 }
