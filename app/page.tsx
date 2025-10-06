@@ -59,17 +59,43 @@ export default function Home() {
 
   const [rawBookings, setRawBookings] = useState<Booking[]>([]);
   const [isAuthed, setIsAuthed] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [editTarget, setEditTarget] = useState<ParsedBooking | null>(null);
 
   // Supabase から予約を取得
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
     // 認証状態を監視
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
+      const uid = data.session?.user?.id ?? null;
       setIsAuthed(!!data.session);
+      setUserId(uid);
+      if (uid) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("is_admin")
+          .eq("id", uid)
+          .maybeSingle();
+        setIsAdmin(Boolean((prof as any)?.is_admin));
+      } else {
+        setIsAdmin(false);
+      }
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const uid = session?.user?.id ?? null;
       setIsAuthed(!!session);
+      setUserId(uid);
+      if (uid) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("is_admin")
+          .eq("id", uid)
+          .maybeSingle();
+        setIsAdmin(Boolean((prof as any)?.is_admin));
+      } else {
+        setIsAdmin(false);
+      }
     });
 
     const toLocalIsoHM = (iso: string) => {
@@ -530,6 +556,8 @@ export default function Home() {
         open={isDetailOpen}
         booking={detailBooking}
         onClose={handleCloseDetail}
+        userId={userId}
+        isAdmin={isAdmin}
         onEditRequest={handleEditRequest}
       />
     </div>

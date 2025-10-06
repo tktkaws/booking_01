@@ -11,9 +11,11 @@ type ReservationDetailModalProps = {
   booking: ParsedBooking | null;
   onClose: () => void;
   onEditRequest?: (booking: ParsedBooking) => void;
+  userId: string | null;
+  isAdmin: boolean;
 };
 
-export function ReservationDetailModal({ open, booking, onClose, onEditRequest }: ReservationDetailModalProps) {
+export function ReservationDetailModal({ open, booking, onClose, onEditRequest, userId, isAdmin }: ReservationDetailModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -69,6 +71,7 @@ export function ReservationDetailModal({ open, booking, onClose, onEditRequest }
   }
 
   const scheduleLabel = `${fullDateFormatter.format(booking.startDate)} ${formatMinutes(booking.startMinutes)}〜${formatMinutes(booking.endMinutes)}`;
+  const canEdit = isAdmin || (userId && booking.ownerUserId === userId);
 
   const handleEdit = () => {
     if (!booking) return;
@@ -151,20 +154,24 @@ export function ReservationDetailModal({ open, booking, onClose, onEditRequest }
           </div>
         </div>
         <footer className="flex items-center justify-end gap-3 border-t border-slate-200 px-6 py-4">
-          <button
-            type="button"
-            onClick={handleDelete}
-            className="rounded-md border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 transition hover:border-red-300 hover:bg-red-50"
-          >
-            削除
-          </button>
-          <button
-            type="button"
-            onClick={handleEdit}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
-          >
-            編集
-          </button>
+          {canEdit && (
+            <>
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="rounded-md border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 transition hover:border-red-300 hover:bg-red-50"
+              >
+                削除
+              </button>
+              <button
+                type="button"
+                onClick={handleEdit}
+                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+              >
+                編集
+              </button>
+            </>
+          )}
         </footer>
       </div>
     </dialog>
