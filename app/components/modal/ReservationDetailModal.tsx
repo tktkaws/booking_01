@@ -3,15 +3,17 @@
 import { useEffect, useRef } from "react";
 
 import { formatMinutes, fullDateFormatter } from "@/lib/calendar";
+import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { type ParsedBooking } from "@/types/bookings";
 
 type ReservationDetailModalProps = {
   open: boolean;
   booking: ParsedBooking | null;
   onClose: () => void;
+  onEditRequest?: (booking: ParsedBooking) => void;
 };
 
-export function ReservationDetailModal({ open, booking, onClose }: ReservationDetailModalProps) {
+export function ReservationDetailModal({ open, booking, onClose, onEditRequest }: ReservationDetailModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -69,11 +71,24 @@ export function ReservationDetailModal({ open, booking, onClose }: ReservationDe
   const scheduleLabel = `${fullDateFormatter.format(booking.startDate)} ${formatMinutes(booking.startMinutes)}〜${formatMinutes(booking.endMinutes)}`;
 
   const handleEdit = () => {
-    console.info("edit booking", booking.id);
+    if (!booking) return;
+    onEditRequest?.(booking);
   };
 
-  const handleDelete = () => {
-    console.info("delete booking", booking.id);
+  const handleDelete = async () => {
+    if (!booking) return;
+    const supabase = getSupabaseBrowserClient();
+    if (!confirm("この予約を削除しますか？")) return;
+    const { error } = await supabase
+      .from("bookings")
+      .delete()
+      .eq("id", Number(booking.id));
+    if (error) {
+      alert(`削除に失敗しました: ${error.message}`);
+      return;
+    }
+    window.dispatchEvent(new CustomEvent("bookings:changed"));
+    onClose();
   };
 
   return (

@@ -18,7 +18,8 @@ import {
   toDateKey,
 } from "@/lib/calendar";
 import { cn } from "@/lib/utils";
-import { type BookingsByDate } from "@/types/bookings";
+import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { type BookingsByDate, type ParsedBooking } from "@/types/bookings";
 
 type CreateBookingModalProps = {
   open: boolean;
@@ -26,6 +27,9 @@ type CreateBookingModalProps = {
   selectedDate: Date;
   bookingsByDate: BookingsByDate;
   departments: string[];
+  mode?: "create" | "edit";
+  initialBooking?: ParsedBooking | null;
+  onSaved?: () => void;
 };
 
 export function CreateBookingModal({
@@ -34,6 +38,9 @@ export function CreateBookingModal({
   selectedDate,
   bookingsByDate,
   departments,
+  mode = "create",
+  initialBooking = null,
+  onSaved,
 }: CreateBookingModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const startDetailsRef = useRef<HTMLDetailsElement>(null);
@@ -42,6 +49,17 @@ export function CreateBookingModal({
   const dateKey = toDateKey(selectedDate);
 
   const initialFormState = useMemo(() => {
+    if (mode === "edit" && initialBooking) {
+      return {
+        title: initialBooking.title,
+        department: initialBooking.departmentName ?? departments[0] ?? "所属未設定",
+        date: initialBooking.startDateKey,
+        start: formatMinutes(initialBooking.startMinutes),
+        end: formatMinutes(initialBooking.endMinutes),
+        isCompanyWide: initialBooking.isCompanyWide,
+        description: initialBooking.description ?? "",
+      };
+    }
     return {
       title: "",
       department: departments[0] ?? "所属未設定",
@@ -51,7 +69,7 @@ export function CreateBookingModal({
       isCompanyWide: false,
       description: "",
     };
-  }, [departments, dateKey]);
+  }, [departments, dateKey, initialBooking, mode]);
 
   const [formState, setFormState] = useState(initialFormState);
 
@@ -129,10 +147,64 @@ export function CreateBookingModal({
     }
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.table(formState);
-    onClose();
+    const supabase = getSupabaseBrowserClient();
+    // JST 固定で timestamptz を送信
+    const start_at = `${formState.date}T${formState.start}:00+09:00`;
+    const end_at = `${formState.date}T${formState.end}:00+09:00`;
+    // 簡易バリデーション（終了が開始より後）
+    const toMinutes = (hhmm: string) => {
+      const [h, m] = hhmm.split(":").map(Number);
+      return (h || 0) * 60 + (m || 0);
+    };
+    if (toMinutes(formState.end) <= toMinutes(formState.start)) {
+      alert("終了時刻は開始時刻より後にしてください。");
+      return;
+    }
+    try {
+      // 事前重複チェック（[start, end) が既存と重なるか）
+      const base = supabase
+        .from("bookings")
+        .select("id", { count: "exact", head: true })
+        .lt("start_at", end_at)
+        .gt("end_at", start_at);
+      const conflictQuery = mode === "edit" && initialBooking
+        ? base.neq("id", Number(initialBooking.id))
+        : base;
+      const { count: conflictCount, error: conflictError } = await conflictQuery;
+      if (conflictError) throw conflictError;
+      if ((conflictCount ?? 0) > 0) {
+        alert("選択した時間帯は既存の予約と重複しています。別の時間を選択してください。");
+        return;
+      }
+      if (mode === "edit" && initialBooking) {
+        const { error } = await supabase
+          .from("bookings")
+          .update({
+            title: formState.title,
+            description: formState.description,
+            start_at,
+            end_at,
+          })
+          .eq("id", Number(initialBooking.id));
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("bookings").insert({
+          title: formState.title,
+          description: formState.description,
+          start_at,
+          end_at,
+        });
+        if (error) throw error;
+      }
+      // 一覧更新イベントを通知
+      window.dispatchEvent(new CustomEvent("bookings:changed"));
+      onSaved?.();
+      onClose();
+    } catch (e: any) {
+      alert(`保存に失敗しました: ${e?.message ?? e}`);
+    }
   };
 
   return (
@@ -143,7 +215,7 @@ export function CreateBookingModal({
       <form method="dialog" className="flex flex-col" onSubmit={handleSubmit}>
         <header className="flex items-start justify-between border-b border-slate-200 px-6 py-4">
           <div>
-            <h2 className="text-lg font-semibold">予約を作成</h2>
+            <h2 className="text-lg font-semibold">{mode === "edit" ? "予約を編集" : "予約を作成"}</h2>
             <p className="text-xs text-slate-500">
               {fullDateFormatter.format(formDate)} の会議室予約を登録します
             </p>

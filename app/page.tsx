@@ -59,6 +59,7 @@ export default function Home() {
 
   const [rawBookings, setRawBookings] = useState<Booking[]>([]);
   const [isAuthed, setIsAuthed] = useState(false);
+  const [editTarget, setEditTarget] = useState<ParsedBooking | null>(null);
 
   // Supabase から予約を取得
   useEffect(() => {
@@ -80,30 +81,35 @@ export default function Home() {
       const mm = `${d.getMinutes()}`.padStart(2, "0");
       return `${y}-${m}-${da}T${hh}:${mm}+00:00`;
     };
-
-    supabase
-      .from("bookings")
-      .select("id, title, description, start_at, end_at, created_by")
-      .order("start_at", { ascending: true })
-      .then(({ data, error }) => {
-        if (error) {
-          console.warn("failed to fetch bookings", error.message);
-          return;
-        }
-        const converted: Booking[] = (data ?? []).map((row: any) => ({
-          id: String(row.id),
-          title: row.title,
-          departmentId: "", // 部署は未使用/不明のため空（色はデフォルト）
-          ownerUserId: row.created_by ?? "",
-          start: toLocalIsoHM(row.start_at),
-          end: toLocalIsoHM(row.end_at),
-          isCompanyWide: false,
-          description: row.description ?? "",
-        }));
-        setRawBookings(converted);
-      });
+    const loadBookings = () => {
+      supabase
+        .from("bookings")
+        .select("id, title, description, start_at, end_at, created_by")
+        .order("start_at", { ascending: true })
+        .then(({ data, error }) => {
+          if (error) {
+            console.warn("failed to fetch bookings", error.message);
+            return;
+          }
+          const converted: Booking[] = (data ?? []).map((row: any) => ({
+            id: String(row.id),
+            title: row.title,
+            departmentId: "", // 部署は未使用/不明のため空（色はデフォルト）
+            ownerUserId: row.created_by ?? "",
+            start: toLocalIsoHM(row.start_at),
+            end: toLocalIsoHM(row.end_at),
+            isCompanyWide: false,
+            description: row.description ?? "",
+          }));
+          setRawBookings(converted);
+        });
+    };
+    loadBookings();
+    const onChanged = () => loadBookings();
+    window.addEventListener("bookings:changed", onChanged);
     return () => {
       sub.subscription.unsubscribe();
+      window.removeEventListener("bookings:changed", onChanged);
     };
   }, []);
 
@@ -330,6 +336,15 @@ export default function Home() {
     setDetailBooking(null);
   };
 
+  const handleEditRequest = (booking: ParsedBooking) => {
+    const bookingDate = stripTime(booking.startDate);
+    setSelectedDate(bookingDate);
+    setFocusDate(bookingDate);
+    setEditTarget(booking);
+    setIsDetailOpen(false);
+    setIsCreateModalOpen(true);
+  };
+
   // 共通部分は常に全幅表示にするため、main は全幅固定。
   // ヘッダーを main の外に出すため、main は下側余白のみ。
   const mainClassName = cn("w-full px-6 pb-10", "max-w-none");
@@ -350,7 +365,7 @@ export default function Home() {
     <div className="min-h-screen bg-slate-100">
       <header className="mb-8 px-6 pt-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-          <h1 className="text-2xl font-semibold text-slate-900">予約</h1>
+          <h1 className="text-2xl font-semibold text-slate-900">📅予約</h1>
           <div className="flex flex-wrap gap-2">
             {VIEW_OPTIONS.map(({ key, label }) => (
               <button
@@ -498,15 +513,24 @@ export default function Home() {
 
       <CreateBookingModal
         open={isCreateModalOpen}
-        onClose={handleCloseCreateModal}
+        onClose={() => {
+          setEditTarget(null);
+          handleCloseCreateModal();
+        }}
         selectedDate={modalDate}
         bookingsByDate={bookingsByDate}
         departments={departmentNames}
+        mode={editTarget ? "edit" : "create"}
+        initialBooking={editTarget}
+        onSaved={() => {
+          // no-op; reload is triggered via bookings:changed event listener
+        }}
       />
       <ReservationDetailModal
         open={isDetailOpen}
         booking={detailBooking}
         onClose={handleCloseDetail}
+        onEditRequest={handleEditRequest}
       />
     </div>
   );
