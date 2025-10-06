@@ -18,8 +18,14 @@ export function ProfileEditModal({ open, onClose, onUpdated }: ProfileEditModalP
   const [userId, setUserId] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState("");
   const [departmentId, setDepartmentId] = useState<string>("");
-  const [colorSettings, setColorSettings] = useState("");
-  const [departments, setDepartments] = useState<Array<{ id: string; name: string }>>([]);
+  const [departments, setDepartments] = useState<Array<{ id: string; name: string; default_color?: string }>>([]);
+  const [colorsByDept, setColorsByDept] = useState<Record<string, string>>({});
+
+  const normalizeHex = (input: string): string | null => {
+    const v = (input ?? "").trim().replace(/^#?/, "").toLowerCase();
+    if (/^[0-9a-f]{6}$/.test(v)) return `#${v}`;
+    return null;
+  };
 
   // dialog open/close handling
   useEffect(() => {
@@ -72,7 +78,7 @@ export function ProfileEditModal({ open, onClose, onUpdated }: ProfileEditModalP
       setUserId(user.id);
 
       const [{ data: deps }, { data: prof } ] = await Promise.all([
-        supabase.from("departments").select("id,name").order("name", { ascending: true }),
+        supabase.from("departments").select("id,name,default_color").order("name", { ascending: true }),
         supabase
           .from("profiles")
           .select("id, display_name, department_id, color_settings")
@@ -81,16 +87,19 @@ export function ProfileEditModal({ open, onClose, onUpdated }: ProfileEditModalP
       ]);
 
       if (deps) {
-        const list = deps as Array<{ id: string; name: string }>;
+        const list = deps as Array<{ id: string; name: string; default_color?: string }>;
         setDepartments(list);
         // 後続の departmentId 初期化で使用するため保持
       }
       const p = prof as any | null;
       const currentDept = p?.department_id as string | undefined;
       setDisplayName(p?.display_name ?? "");
-      setColorSettings(p?.color_settings ?? "");
+      const raw = p?.color_settings;
+      if (raw && typeof raw === 'object') setColorsByDept(raw as Record<string, string>);
+      else setColorsByDept({});
       // departmentId が未設定の場合は部門リストの先頭を使う
-      setDepartmentId(currentDept && currentDept !== "" ? currentDept : ((deps as any)?.[0]?.id ?? ""));
+      const initialDept = currentDept && currentDept !== "" ? currentDept : ((deps as any)?.[0]?.id ?? "");
+      setDepartmentId(initialDept);
     };
     if (open) {
       setMessage(null);
@@ -109,12 +118,18 @@ export function ProfileEditModal({ open, onClose, onUpdated }: ProfileEditModalP
       return;
     }
     // 行が存在しないケースも考慮して upsert を使用
+    // 不正カラーを除去して保存
+    const filtered: Record<string, string> = {};
+    Object.entries(colorsByDept).forEach(([k, v]) => {
+      const n = normalizeHex(v || "");
+      if (n) filtered[k] = n;
+    });
     const { error } = await supabase.from("profiles").upsert(
       {
         id: userId,
         display_name: displayName,
         department_id: departmentId,
-        color_settings: colorSettings,
+        color_settings: filtered,
       },
       { onConflict: "id" }
     );
@@ -123,6 +138,8 @@ export function ProfileEditModal({ open, onClose, onUpdated }: ProfileEditModalP
       setMessage(error.message);
       return;
     }
+    // 画面側の表示（色/名前）を更新するためイベント発火
+    window.dispatchEvent(new CustomEvent("profiles:changed"));
     onUpdated?.();
     onClose();
   };
@@ -169,16 +186,69 @@ export function ProfileEditModal({ open, onClose, onUpdated }: ProfileEditModalP
               ))}
             </select>
           </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-sm font-semibold text-slate-700">カラー設定（任意）</span>
-            <input
-              type="text"
-              value={colorSettings}
-              onChange={(e) => setColorSettings(e.target.value)}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-              placeholder="#64748b など"
-            />
-          </label>
+          <div className="space-y-3">
+            <div className="text-sm font-semibold text-slate-700">部署ごとのカラー設定（任意）</div>
+            <div className="space-y-4">
+              {departments.map((d) => {
+                const val = colorsByDept[d.id] ?? "";
+                const normalized = normalizeHex(val ?? "") ?? "";
+                return (
+                  <div key={d.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                    <div className="grid grid-cols-[140px_auto_auto] items-center gap-3">
+                      <div className="text-sm font-semibold text-slate-700">{d.name}</div>
+                      <input
+                        type="color"
+                        value={normalized || d.default_color || "#64748b"}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setColorsByDept((prev) => ({ ...prev, [d.id]: v }));
+                        }}
+                        className="h-9 w-12 cursor-pointer rounded border border-slate-300"
+                        aria-label={`${d.name} のカラーを選択`}
+                      />
+                      <input
+                        type="text"
+                        value={val}
+                        onChange={(e) => {
+                          setColorsByDept((prev) => ({ ...prev, [d.id]: e.target.value }));
+                        }}
+                        onBlur={(e) => {
+                          const n = normalizeHex(e.target.value);
+                          if (n) setColorsByDept((prev) => ({ ...prev, [d.id]: n }));
+                        }}
+                        placeholder={d.default_color || "#64748b"}
+                        className="w-44 rounded-md border border-slate-300 px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <div className="mt-2 flex items-center gap-3">
+                      <span
+                        className="inline-flex h-6 w-6 rounded-full border border-slate-300"
+                        style={{ backgroundColor: normalized || d.default_color || "#64748b" }}
+                      />
+                      {d.default_color && (
+                        <div className="text-xs text-slate-500">部署デフォルト: {d.default_color}</div>
+                      )}
+                    </div>
+                    <div className="pt-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setColorsByDept((prev) => {
+                            const next = { ...prev };
+                            delete next[d.id];
+                            return next;
+                          });
+                        }}
+                        className="rounded border border-slate-300 px-3 py-2 text-xs text-slate-600 hover:bg-white"
+                      >
+                        デフォルトに戻す
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
           {message && <div className="text-sm text-rose-600">{message}</div>}
         </div>
         <footer className="flex items-center justify-end gap-3 border-t border-slate-200 px-6 py-4">

@@ -7,6 +7,10 @@ import { WeekView } from "@/components/calendar/WeekView";
 import { ListView } from "@/components/list/ListView";
 import { CreateBookingModal } from "@/components/modal/CreateBookingModal";
 import { ReservationDetailModal } from "@/components/modal/ReservationDetailModal";
+import { UsersList, type AdminUserRow } from "@/components/list/UsersList";
+import { DepartmentsList } from "@/components/list/DepartmentsList";
+import { DepartmentEditModal } from "@/components/modal/DepartmentEditModal";
+import { UserEditModal } from "@/components/modal/UserEditModal";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { AuthButton } from "@/components/auth/AuthButton";
 // Supabase から profiles/departments を取得して表示用に利用
@@ -32,7 +36,7 @@ import {
   type ViewType,
 } from "@/types/bookings";
 
-const VIEW_OPTIONS: ReadonlyArray<{ key: ViewType; label: string }> = [
+const BASE_VIEW_OPTIONS: ReadonlyArray<{ key: ViewType; label: string }> = [
   { key: "month", label: "月間ビュー" },
   { key: "week", label: "週間ビュー" },
   { key: "list", label: "リストビュー" },
@@ -40,7 +44,7 @@ const VIEW_OPTIONS: ReadonlyArray<{ key: ViewType; label: string }> = [
 
 export default function Home() {
   const [depMap, setDepMap] = useState<Map<string, Department>>(new Map());
-  const [profileMap, setProfileMap] = useState<Map<string, { display_name: string; department_id: string; department_name?: string }>>(new Map());
+  const [profileMap, setProfileMap] = useState<Map<string, { display_name: string; department_id: string; department_name?: string; color_settings?: Record<string, string> }>>(new Map());
   const [departmentNames, setDepartmentNames] = useState<string[]>([]);
 
   const getTextColor = (hex: string): string => {
@@ -62,6 +66,11 @@ export default function Home() {
   const [userId, setUserId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [editTarget, setEditTarget] = useState<ParsedBooking | null>(null);
+  const [users, setUsers] = useState<AdminUserRow[]>([]);
+  const [userModalOpen, setUserModalOpen] = useState(false);
+  const [userEditing, setUserEditing] = useState<AdminUserRow | null>(null);
+  const [deptModalOpen, setDeptModalOpen] = useState(false);
+  const [deptEditing, setDeptEditing] = useState<Department | null>(null);
 
   // Supabase から予約を取得
   useEffect(() => {
@@ -146,7 +155,8 @@ export default function Home() {
       const profile = profileMap.get(booking.ownerUserId);
       const departmentId = profile?.department_id ?? booking.departmentId;
       const dep = departmentId ? depMap.get(departmentId) : undefined;
-      const color = dep?.default_color ?? '#64748b';
+      const userColor = profile?.color_settings?.[departmentId ?? ""];
+      const color = userColor ?? (dep?.default_color ?? '#64748b');
       const textColor = getTextColor(color);
       return {
         ...booking,
@@ -189,44 +199,90 @@ export default function Home() {
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
     // 部署
-    supabase
-      .from("departments")
-      .select("id,name,default_color")
-      .order("name", { ascending: true })
-      .then(({ data, error }) => {
-        if (error) {
-          console.warn("failed to fetch departments", error.message);
-          return;
-        }
-        const m = new Map<string, Department>();
-        const names: string[] = [];
-        (data ?? []).forEach((d: any) => {
-          m.set(String(d.id), { id: String(d.id), name: d.name, default_color: d.default_color });
-          names.push(d.name as string);
-        });
-        setDepMap(m);
-        setDepartmentNames(names);
-      });
-    // プロファイル（公開ビュー推奨）
-    supabase
-      .from("profiles_public")
-      .select("id, display_name, department_id, department_name")
-      .then(({ data, error }) => {
-        if (error) {
-          console.warn("failed to fetch profiles_public", error.message);
-          return;
-        }
-        const m = new Map<string, { display_name: string; department_id: string; department_name?: string }>();
-        (data ?? []).forEach((row: any) => {
-          m.set(String(row.id), {
-            display_name: row.display_name,
-            department_id: row.department_id ?? "",
-            department_name: row.department_name ?? undefined,
+    const loadDepartments = () => {
+      supabase
+        .from("departments")
+        .select("id,name,default_color")
+        .order("name", { ascending: true })
+        .then(({ data, error }) => {
+          if (error) {
+            console.warn("failed to fetch departments", error.message);
+            return;
+          }
+          const m = new Map<string, Department>();
+          const names: string[] = [];
+          (data ?? []).forEach((d: any) => {
+            m.set(String(d.id), { id: String(d.id), name: d.name, default_color: d.default_color });
+            names.push(d.name as string);
           });
+          setDepMap(m);
+          setDepartmentNames(names);
         });
-        setProfileMap(m);
-      });
+    };
+    loadDepartments();
+    const onDepsChanged = () => loadDepartments();
+    window.addEventListener("departments:changed", onDepsChanged);
+    // プロファイル（公開ビュー推奨）
+    const loadProfiles = () => {
+      supabase
+        .from("profiles_public")
+        .select("id, display_name, department_id, department_name, color_settings")
+        .then(({ data, error }) => {
+          if (error) {
+            console.warn("failed to fetch profiles_public", error.message);
+            return;
+          }
+          const m = new Map<string, { display_name: string; department_id: string; department_name?: string; color_settings?: Record<string, string> }>();
+          (data ?? []).forEach((row: any) => {
+            m.set(String(row.id), {
+              display_name: row.display_name,
+              department_id: row.department_id ?? "",
+              department_name: row.department_name ?? undefined,
+              color_settings: row.color_settings ?? undefined,
+            });
+          });
+          setProfileMap(m);
+        });
+    };
+    loadProfiles();
+    const onProfilesChanged = () => loadProfiles();
+    window.addEventListener("profiles:changed", onProfilesChanged);
+    // 管理者がユーザー情報を変更した場合にも再読込
+    window.addEventListener("users:changed", onProfilesChanged);
+    return () => {
+      window.removeEventListener("departments:changed", onDepsChanged);
+      window.removeEventListener("profiles:changed", onProfilesChanged);
+      window.removeEventListener("users:changed", onProfilesChanged);
+    };
   }, []);
+
+  // 管理者: ユーザー一覧取得
+  useEffect(() => {
+    const supabase = getSupabaseBrowserClient();
+    if (!isAdmin) return;
+    const loadUsers = () => {
+      supabase
+        .from("profiles")
+        .select("id, display_name, department_id, is_admin, deleted_at")
+        .order("display_name", { ascending: true })
+        .then(({ data, error }) => {
+          if (error) return;
+          const rows: AdminUserRow[] = (data ?? []).map((r: any) => ({
+            id: String(r.id),
+            display_name: r.display_name,
+            department_id: String(r.department_id),
+            department_name: depMap.get(String(r.department_id))?.name,
+            is_admin: Boolean(r.is_admin),
+            deleted_at: r.deleted_at,
+          }));
+          setUsers(rows);
+        });
+    };
+    loadUsers();
+    const onChanged = () => loadUsers();
+    window.addEventListener("users:changed", onChanged);
+    return () => window.removeEventListener("users:changed", onChanged);
+  }, [depMap, isAdmin]);
 
   const VIEW_STORAGE_KEY = "booking_view";
   const [view, setView] = useState<ViewType>("month");
@@ -275,6 +331,7 @@ export default function Home() {
   // List view filter (start/end). Default: start=today, end=unset (all future)
   const [listFilterFrom, setListFilterFrom] = useState<Date>(() => stripTime(new Date()));
   const [listFilterTo, setListFilterTo] = useState<Date | null>(null);
+  const [createInitialStart, setCreateInitialStart] = useState<string | null>(null);
 
   const weekReferenceDate = selectedDate ?? focusDate;
 
@@ -287,7 +344,9 @@ export default function Home() {
       const end = addDays(start, WORKING_DAY_COUNT - 1);
       return `${monthDayFormatter.format(start)}〜${monthDayFormatter.format(end)}`;
     }
-    return "全予約一覧";
+    if (view === "list") return "全予約一覧";
+    if (view === "users") return "ユーザー一覧";
+    return "";
   }, [focusDate, view, weekReferenceDate]);
 
   const handlePrev = () => {
@@ -339,6 +398,12 @@ export default function Home() {
       const normalized = stripTime(date);
       setSelectedDate(normalized);
       setFocusDate(normalized);
+      // If time info is provided, remember initial start hh:mm
+      const hh = date.getHours();
+      const mm = date.getMinutes();
+      if (hh !== 0 || mm !== 0) {
+        setCreateInitialStart(`${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`);
+      }
     } else if (!selectedDate) {
       setSelectedDate(focusDate);
     }
@@ -393,7 +458,11 @@ export default function Home() {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
           <h1 className="text-2xl font-semibold text-slate-900">📅予約</h1>
           <div className="flex flex-wrap gap-2">
-            {VIEW_OPTIONS.map(({ key, label }) => (
+            {(
+              isAdmin
+                ? [...BASE_VIEW_OPTIONS, { key: "users" as ViewType, label: "ユーザー一覧" }, { key: "departments" as ViewType, label: "部署一覧" }]
+                : BASE_VIEW_OPTIONS
+            ).map(({ key, label }) => (
               <button
                 key={key}
                 type="button"
@@ -527,12 +596,39 @@ export default function Home() {
             selectedDate={selectedDate}
             bookingsByDate={bookingsByDate}
             onSelectDate={handleSelectDate}
+            onCreateRequest={handleOpenCreateModal}
             onBookingClick={handleOpenDetail}
           />
         )}
         {view === "list" && (
           <div className="mx-auto w-full max-w-[1200px]">
             <ListView bookings={filteredListBookings} onBookingClick={handleOpenDetail} />
+          </div>
+        )}
+        {view === "users" && isAdmin && (
+          <div className="mx-auto w-full max-w-[1200px]">
+            <UsersList
+              users={users}
+              onUserClick={(u) => {
+                setUserEditing(u);
+                setUserModalOpen(true);
+              }}
+            />
+          </div>
+        )}
+        {view === "departments" && isAdmin && (
+          <div className="mx-auto w-full max-w-[1200px]">
+            <DepartmentsList
+              departments={Array.from(depMap.values()).sort((a,b)=>a.name.localeCompare(b.name))}
+              onCreate={() => {
+                setDeptEditing(null);
+                setDeptModalOpen(true);
+              }}
+              onEdit={(d) => {
+                setDeptEditing(d);
+                setDeptModalOpen(true);
+              }}
+            />
           </div>
         )}
       </main>
@@ -542,12 +638,14 @@ export default function Home() {
         onClose={() => {
           setEditTarget(null);
           handleCloseCreateModal();
+          setCreateInitialStart(null);
         }}
         selectedDate={modalDate}
         bookingsByDate={bookingsByDate}
         departments={departmentNames}
         mode={editTarget ? "edit" : "create"}
         initialBooking={editTarget}
+        initialStartHHMM={createInitialStart ?? undefined}
         onSaved={() => {
           // no-op; reload is triggered via bookings:changed event listener
         }}
@@ -559,6 +657,31 @@ export default function Home() {
         userId={userId}
         isAdmin={isAdmin}
         onEditRequest={handleEditRequest}
+      />
+
+      <UserEditModal
+        open={userModalOpen}
+        user={userEditing}
+        departments={Array.from(depMap.values()).map((d) => ({ id: d.id, name: d.name, default_color: d.default_color }))}
+        onClose={() => {
+          setUserModalOpen(false);
+          setUserEditing(null);
+        }}
+        onSaved={() => {
+          /* users:changed リスナーで再取得 */
+        }}
+      />
+
+      <DepartmentEditModal
+        open={deptModalOpen}
+        department={deptEditing}
+        onClose={() => {
+          setDeptModalOpen(false);
+          setDeptEditing(null);
+        }}
+        onSaved={() => {
+          /* departments:changed リスナーで再取得 */
+        }}
       />
     </div>
   );

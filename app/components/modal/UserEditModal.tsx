@@ -12,7 +12,7 @@ export type AdminUserRow = {
   deleted_at: string | null;
 };
 
-type DepartmentOption = { id: string; name: string };
+type DepartmentOption = { id: string; name: string; default_color?: string };
 
 type UserEditModalProps = {
   open: boolean;
@@ -30,6 +30,13 @@ export function UserEditModal({ open, user, departments, onClose, onSaved }: Use
   const [departmentId, setDepartmentId] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
   const [deletedAt, setDeletedAt] = useState<string | null>(null);
+  const [colorsByDept, setColorsByDept] = useState<Record<string, string>>({});
+
+  const normalizeHex = (input: string): string | null => {
+    const v = input.trim().replace(/^#?/, "").toLowerCase();
+    if (/^[0-9a-f]{6}$/.test(v)) return `#${v}`;
+    return null;
+  };
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -47,24 +54,48 @@ export function UserEditModal({ open, user, departments, onClose, onSaved }: Use
     setDepartmentId(user.department_id);
     setIsAdmin(Boolean(user.is_admin));
     setDeletedAt(user.deleted_at);
+    // fetch current color_settings for this user
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("color_settings")
+        .eq("id", user.id)
+        .maybeSingle();
+      const raw = (data as any)?.color_settings ?? {};
+      if (raw && typeof raw === 'object') {
+        setColorsByDept(raw as Record<string, string>);
+      } else {
+        setColorsByDept({});
+      }
+    })();
   }, [user]);
+
+  // no selectedDeptId needed; show all departments at once
 
   const deptOptions = useMemo(() => departments, [departments]);
 
   const handleSave = async () => {
     if (!user) return;
+    // keep only valid hex values
+    const filtered: Record<string, string> = {};
+    Object.entries(colorsByDept).forEach(([k, v]) => {
+      const n = normalizeHex(v || "");
+      if (n) filtered[k] = n;
+    });
     const { error } = await supabase
       .from("profiles")
       .update({
         display_name: displayName,
         department_id: departmentId,
         is_admin: isAdmin,
+        color_settings: filtered,
       })
       .eq("id", user.id);
     if (error) {
       alert(`保存に失敗しました: ${error.message}`);
       return;
     }
+    window.dispatchEvent(new CustomEvent("profiles:changed"));
     window.dispatchEvent(new CustomEvent("users:changed"));
     onSaved?.();
     onClose();
@@ -81,6 +112,7 @@ export function UserEditModal({ open, user, departments, onClose, onSaved }: Use
       alert(`削除に失敗しました: ${error.message}`);
       return;
     }
+    window.dispatchEvent(new CustomEvent("profiles:changed"));
     window.dispatchEvent(new CustomEvent("users:changed"));
     onSaved?.();
     onClose();
@@ -96,6 +128,7 @@ export function UserEditModal({ open, user, departments, onClose, onSaved }: Use
       alert(`復元に失敗しました: ${error.message}`);
       return;
     }
+    window.dispatchEvent(new CustomEvent("profiles:changed"));
     window.dispatchEvent(new CustomEvent("users:changed"));
     onSaved?.();
     onClose();
@@ -153,6 +186,69 @@ export function UserEditModal({ open, user, departments, onClose, onSaved }: Use
             <p className="text-xs text-rose-600">このユーザーは削除済みです（{new Date(deletedAt).toLocaleString()}）</p>
           )}
         </div>
+        <div className="space-y-3 border-t border-slate-200 px-6 py-5">
+          <div className="text-sm font-semibold text-slate-700">部署ごとのカラー設定</div>
+          <div className="space-y-4">
+            {deptOptions.map((d) => {
+              const val = colorsByDept[d.id] ?? "";
+              const normalized = normalizeHex(val ?? "") ?? "";
+              return (
+                <div key={d.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                  <div className="grid grid-cols-[140px_auto_auto] items-center gap-3">
+                    <div className="text-sm font-semibold text-slate-700">{d.name}</div>
+                    <input
+                      type="color"
+                      value={normalized || d.default_color || "#64748b"}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setColorsByDept((prev) => ({ ...prev, [d.id]: v }));
+                      }}
+                      className="h-9 w-12 cursor-pointer rounded border border-slate-300"
+                      aria-label={`${d.name} のカラーを選択`}
+                    />
+                    <input
+                      type="text"
+                      value={val}
+                      onChange={(e) => {
+                        setColorsByDept((prev) => ({ ...prev, [d.id]: e.target.value }));
+                      }}
+                      onBlur={(e) => {
+                        const n = normalizeHex(e.target.value);
+                        if (n) setColorsByDept((prev) => ({ ...prev, [d.id]: n }));
+                      }}
+                      placeholder={d.default_color || "#64748b"}
+                      className="w-44 rounded-md border border-slate-300 px-3 py-2 text-sm"
+                    />
+                  </div>
+                  <div className="mt-2 flex items-center gap-3">
+                    <span
+                      className="inline-flex h-6 w-6 rounded-full border border-slate-300"
+                      style={{ backgroundColor: normalized || d.default_color || "#64748b" }}
+                    />
+                    {d.default_color && (
+                      <div className="text-xs text-slate-500">部署デフォルト: {d.default_color}</div>
+                    )}
+                  </div>
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setColorsByDept((prev) => {
+                          const next = { ...prev };
+                          delete next[d.id];
+                          return next;
+                        });
+                      }}
+                      className="rounded border border-slate-300 px-3 py-2 text-xs text-slate-600 hover:bg-white"
+                    >
+                      デフォルトに戻す
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
         <footer className="flex items-center justify-end gap-3 border-t border-slate-200 px-6 py-4">
           {deletedAt ? (
             <button
@@ -183,4 +279,3 @@ export function UserEditModal({ open, user, departments, onClose, onSaved }: Use
     </dialog>
   );
 }
-
