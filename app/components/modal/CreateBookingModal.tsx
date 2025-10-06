@@ -48,6 +48,9 @@ export function CreateBookingModal({
 
   const dateKey = toDateKey(selectedDate);
 
+  // 開始時間の候補から 18:00 を除外（終了は 18:00 を許可）
+  const START_SLOTS = useMemo(() => TIME_SLOTS.filter((t) => t !== "18:00"), []);
+
   const initialFormState = useMemo(() => {
     if (mode === "edit" && initialBooking) {
       return {
@@ -72,6 +75,9 @@ export function CreateBookingModal({
   }, [departments, dateKey, initialBooking, mode]);
 
   const [formState, setFormState] = useState(initialFormState);
+  const [hasConflict, setHasConflict] = useState(false);
+  const [checkingConflict, setCheckingConflict] = useState(false);
+  const supabase = getSupabaseBrowserClient();
 
   const formDateKey = formState.date || dateKey;
   const formDate = useMemo(() => fromDateKey(formDateKey), [formDateKey]);
@@ -135,10 +141,36 @@ export function CreateBookingModal({
     >
   ) => {
     const { name, value, type, checked } = event.target;
-    setFormState((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    setFormState((prev) => {
+      const next = {
+        ...prev,
+        [name]: type === "checkbox" ? checked : value,
+      } as typeof prev;
+      // 1) 開始時間を変更したら、終了を+60分に自動調整
+      if (name === "start") {
+        const toMinutes = (hhmm: string) => {
+          const [h, m] = hhmm.split(":").map(Number);
+          return (h || 0) * 60 + (m || 0);
+        };
+        const fromMinutes = (mins: number) => {
+          const h = Math.floor(mins / 60).toString().padStart(2, "0");
+          const m = (mins % 60).toString().padStart(2, "0");
+          return `${h}:${m}`;
+        };
+        const startMin = toMinutes(value);
+        const targetMin = startMin + 60;
+        // 候補: targetMin 以上の最小のスロット
+        const candidate = TIME_SLOTS.find((slot) => toMinutes(slot) >= targetMin);
+        if (candidate) {
+          next.end = candidate;
+        } else {
+          // 予備: 開始より後の最小スロット
+          const after = TIME_SLOTS.find((slot) => toMinutes(slot) > startMin);
+          next.end = after ?? fromMinutes(startMin); // 最悪同値（submit時のバリデーションで弾く）
+        }
+      }
+      return next;
+    });
     if (name === "start") {
       startDetailsRef.current?.removeAttribute("open");
     }
@@ -146,6 +178,36 @@ export function CreateBookingModal({
       endDetailsRef.current?.removeAttribute("open");
     }
   };
+
+  // 2) 開始時間/日付変更時に重複チェック（可能なら）
+  useEffect(() => {
+    if (!open) return;
+    const check = async () => {
+      setCheckingConflict(true);
+      try {
+        const start_at = `${formState.date}T${formState.start}:00+09:00`;
+        const end_at = `${formState.date}T${formState.end}:00+09:00`;
+        let query = supabase
+          .from("bookings")
+          .select("id", { count: "exact", head: true })
+          .lt("start_at", end_at)
+          .gt("end_at", start_at);
+        if (mode === "edit" && initialBooking) {
+          query = query.neq("id", Number(initialBooking.id));
+        }
+        const { count, error } = await query;
+        if (error) throw error;
+        setHasConflict((count ?? 0) > 0);
+      } catch {
+        // 通信失敗時はチェック不能とみなす（submit 時に再チェック）
+        setHasConflict(false);
+      } finally {
+        setCheckingConflict(false);
+      }
+    };
+    check();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formState.date, formState.start]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -258,7 +320,7 @@ export function CreateBookingModal({
                     <span className="text-xs text-slate-500">変更</span>
                   </summary>
                   <div className="absolute left-0 top-full z-30 mt-2 hidden w-[min(360px,calc(100vw-5rem))] rounded-lg border border-slate-200 bg-white p-3 shadow-xl group-open:grid group-open:grid-cols-4 group-open:gap-2">
-                    {TIME_SLOTS.map((slot) => {
+                    {START_SLOTS.map((slot) => {
                       const id = `start-${slot}`;
                       const isSelected = formState.start === slot;
                       return (
@@ -307,13 +369,16 @@ export function CreateBookingModal({
                     {TIME_SLOTS.map((slot) => {
                       const id = `end-${slot}`;
                       const isSelected = formState.end === slot;
+                      const isDisabled = slot <= formState.start; // 3) 開始時間以前は選択不可
                       return (
                         <label
                           key={id}
                           htmlFor={id}
                           className={cn(
                             "cursor-pointer rounded-md border px-3 py-2 text-center text-xs font-semibold transition",
-                            isSelected
+                            isDisabled
+                              ? "cursor-not-allowed border-slate-200 bg-slate-50 text-slate-300"
+                              : isSelected
                               ? "border-blue-500 bg-blue-50 text-blue-700 shadow"
                               : "border-slate-300 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50/80"
                           )}
@@ -325,6 +390,7 @@ export function CreateBookingModal({
                             value={slot}
                             checked={isSelected}
                             onChange={handleFieldChange}
+                            disabled={isDisabled}
                             className="sr-only"
                           />
                           {slot}
@@ -334,6 +400,14 @@ export function CreateBookingModal({
                   </div>
                 </details>
               </div>
+              {(checkingConflict || hasConflict) && (
+                <p className={cn(
+                  "text-xs",
+                  hasConflict ? "text-red-600" : "text-slate-500"
+                )}>
+                  {hasConflict ? "選択した時間帯は既存の予約と重複しています。" : "重複をチェック中..."}
+                </p>
+              )}
             </div>
             <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
               <input
