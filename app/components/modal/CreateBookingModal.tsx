@@ -51,13 +51,17 @@ export function CreateBookingModal({
   const dateKey = toDateKey(selectedDate);
 
   // 開始時間の候補から 18:00 を除外（終了は 18:00 を許可）
-  const START_SLOTS = useMemo(() => TIME_SLOTS.filter((t) => t !== "18:00"), []);
+  const START_SLOTS = useMemo(
+    () => TIME_SLOTS.filter((t) => t !== "18:00"),
+    []
+  );
 
   const initialFormState = useMemo(() => {
     if (mode === "edit" && initialBooking) {
       return {
         title: initialBooking.title,
-        department: initialBooking.departmentName ?? departments[0] ?? "所属未設定",
+        department:
+          initialBooking.departmentName ?? departments[0] ?? "所属未設定",
         date: initialBooking.startDateKey,
         start: formatMinutes(initialBooking.startMinutes),
         end: formatMinutes(initialBooking.endMinutes),
@@ -71,7 +75,8 @@ export function CreateBookingModal({
     };
     const baseStart = initialStartHHMM ?? "09:00";
     const targetMin = toMinutes(baseStart) + 60;
-    const autoEnd = TIME_SLOTS.find((slot) => toMinutes(slot) >= targetMin) || "09:30";
+    const autoEnd =
+      TIME_SLOTS.find((slot) => toMinutes(slot) >= targetMin) || "09:30";
     return {
       title: "",
       department: departments[0] ?? "所属未設定",
@@ -162,14 +167,18 @@ export function CreateBookingModal({
           return (h || 0) * 60 + (m || 0);
         };
         const fromMinutes = (mins: number) => {
-          const h = Math.floor(mins / 60).toString().padStart(2, "0");
+          const h = Math.floor(mins / 60)
+            .toString()
+            .padStart(2, "0");
           const m = (mins % 60).toString().padStart(2, "0");
           return `${h}:${m}`;
         };
         const startMin = toMinutes(value);
         const targetMin = startMin + 60;
         // 候補: targetMin 以上の最小のスロット
-        const candidate = TIME_SLOTS.find((slot) => toMinutes(slot) >= targetMin);
+        const candidate = TIME_SLOTS.find(
+          (slot) => toMinutes(slot) >= targetMin
+        );
         if (candidate) {
           next.end = candidate;
         } else {
@@ -240,13 +249,17 @@ export function CreateBookingModal({
         .select("id", { count: "exact", head: true })
         .lt("start_at", end_at)
         .gt("end_at", start_at);
-      const conflictQuery = mode === "edit" && initialBooking
-        ? base.neq("id", Number(initialBooking.id))
-        : base;
-      const { count: conflictCount, error: conflictError } = await conflictQuery;
+      const conflictQuery =
+        mode === "edit" && initialBooking
+          ? base.neq("id", Number(initialBooking.id))
+          : base;
+      const { count: conflictCount, error: conflictError } =
+        await conflictQuery;
       if (conflictError) throw conflictError;
       if ((conflictCount ?? 0) > 0) {
-        alert("選択した時間帯は既存の予約と重複しています。別の時間を選択してください。");
+        alert(
+          "選択した時間帯は既存の予約と重複しています。別の時間を選択してください。"
+        );
         return;
       }
       if (mode === "edit" && initialBooking) {
@@ -269,8 +282,9 @@ export function CreateBookingModal({
         });
         if (error) throw error;
       }
-      // 一覧更新イベントを通知
+      // 成功: 一覧更新イベントを通知し、成功メッセージ
       window.dispatchEvent(new CustomEvent("bookings:changed"));
+      alert("保存しました");
       onSaved?.();
       onClose();
     } catch (e: any) {
@@ -286,21 +300,20 @@ export function CreateBookingModal({
       <form method="dialog" className="flex flex-col" onSubmit={handleSubmit}>
         <header className="flex items-start justify-between border-b border-slate-200 px-6 py-4">
           <div>
-            <h2 className="text-lg font-semibold">{mode === "edit" ? "予約を編集" : "予約を作成"}</h2>
-            <p className="text-xs text-slate-500">
-              {fullDateFormatter.format(formDate)} の会議室予約を登録します
-            </p>
+            <h1 className="text-lg font-semibold">
+              {mode === "edit" ? "予約編集" : "予約作成"}
+            </h1>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-600 hover:border-slate-400"
+            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 hover:border-slate-400"
             aria-label="モーダルを閉じる"
           >
             閉じる
           </button>
         </header>
-        <div className="grid max-h-[60vh] grid-cols-1 gap-6 overflow-y-auto px-6 py-6 sm:grid-cols-[1.2fr_0.8fr]">
+        <div className="grid max-h-[70vh] grid-cols-1 overflow-y-auto px-6 py-6 sm:grid-cols-[48%_48%] justify-between">
           <section className="space-y-4">
             <div className="flex flex-col gap-4">
               <label className="flex flex-col gap-1 text-sm font-semibold text-slate-700">
@@ -409,14 +422,22 @@ export function CreateBookingModal({
                   </div>
                 </details>
               </div>
-              {(checkingConflict || hasConflict) && (
-                <p className={cn(
+              <p
+                className={cn(
                   "text-xs",
-                  hasConflict ? "text-red-600" : "text-slate-500"
-                )}>
-                  {hasConflict ? "選択した時間帯は既存の予約と重複しています。" : "重複をチェック中..."}
-                </p>
-              )}
+                  checkingConflict
+                    ? "text-slate-500"
+                    : hasConflict
+                    ? "text-red-600"
+                    : "text-emerald-600"
+                )}
+              >
+                {checkingConflict
+                  ? "重複をチェック中..."
+                  : hasConflict
+                  ? "既存の予約と重複しています。"
+                  : "予約可能です"}
+              </p>
             </div>
             <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
               <input
@@ -453,7 +474,7 @@ export function CreateBookingModal({
               />
             </label>
           </section>
-          <section className="space-y-3">
+          <section className="space-y-2">
             <h3 className="text-sm font-semibold text-slate-700">
               {monthDayFormatter.format(formDate)} の予約状況
             </h3>
@@ -466,21 +487,18 @@ export function CreateBookingModal({
               {dailyBookings.map((booking) => (
                 <div
                   key={`modal-booking-${booking.id}`}
-                  className="space-y-1 rounded-lg border border-slate-200 bg-white p-3 shadow-sm"
+                  className="truncate rounded-md px-2 py-1 text-xs font-semibold grid grid-flow-col gap-x-4 grid-cols-[auto_auto_1fr]"
+                  style={{
+                    backgroundColor: booking.color,
+                    color: booking.textColor,
+                  }}
                 >
-                  <div
-                    className="truncate rounded-md px-2 py-1 text-xs font-semibold"
-                    style={{ backgroundColor: booking.color, color: booking.textColor }}
-                  >
-                    {booking.title}
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
-                    <span>
-                      {formatMinutes(booking.startMinutes)}〜{formatMinutes(booking.endMinutes)}
-                    </span>
-                    <span aria-hidden>•</span>
-                    <span>{booking.departmentName}</span>
-                  </div>
+                  <span className="">
+                    {formatMinutes(booking.startMinutes)}〜
+                    {formatMinutes(booking.endMinutes)}
+                  </span>
+                  <span>{booking.title}</span>
+                  <span className="justify-self-end">{booking.departmentName}</span>
                 </div>
               ))}
             </div>
@@ -496,7 +514,7 @@ export function CreateBookingModal({
           </button>
           <button
             type="submit"
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+            className="rounded-md bg-blue-500 px-4 py-2 text-sm font-semibold text-white shadow-sm"
           >
             保存する
           </button>

@@ -11,6 +11,7 @@ import {
   endOfWorkWeek,
   isSameDay,
   isWeekday,
+  formatMinutes,
   startOfMonth,
   startOfWeek,
   stripTime,
@@ -84,7 +85,7 @@ export function MonthView({
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div className="grid grid-cols-5 border-b border-slate-200 bg-slate-50 text-center text-xs font-semibold text-slate-600">
+      <div className="grid grid-cols-5 text-center text-xs font-semibold text-slate-600">
         {WORKING_DAY_INDICES.map((weekday) => (
           <div key={weekday} className="px-2 py-3">
             {weekdayLabelsFull[weekday]}
@@ -105,22 +106,17 @@ export function MonthView({
               type="button"
               onClick={() => handleDayClick(cellDate)}
               className={cn(
-                "flex h-32 flex-col gap-1 rounded-lg border border-white bg-white p-2 text-left transition shadow-sm",
+                "flex min-h-32 flex-col gap-1 bg-white p-2 text-left transition shadow-sm",
                 !isCurrentMonth && "bg-slate-50 text-slate-400",
                 isSelected && "border-blue-500 ring-2 ring-blue-200",
                 isToday && !isSelected && "border-blue-100"
               )}
             >
               <div className="flex items-center justify-between text-sm font-semibold">
-                <span>{cellDate.getDate()}</span>
-                {dailyBookings.length > 0 && (
-                  <span className="text-[11px] font-medium text-slate-500">
-                    {dailyBookings.length}件
-                  </span>
-                )}
+                <span className={cn(isToday ? "text-blue-600" : undefined)}>{cellDate.getDate()}</span>
               </div>
-              <div className="flex flex-col gap-1">
-                {dailyBookings.slice(0, 2).map((booking) => (
+              <div className="flex-1 min-h-0 flex flex-col gap-1 overflow-y-auto pr-1">
+                {dailyBookings.map((booking) => (
                   <div
                     key={booking.id}
                     role="button"
@@ -133,14 +129,12 @@ export function MonthView({
                       color: booking.textColor,
                     }}
                   >
-                    {booking.title}
+                    <span className="mr-1 text-[10px] opacity-80">
+                      {formatMinutes(booking.startMinutes)}
+                    </span>
+                    <span className="truncate">{booking.title}</span>
                   </div>
                 ))}
-                {dailyBookings.length > 2 && (
-                  <span className="text-[11px] text-slate-500">
-                    +{dailyBookings.length - 2} 件
-                  </span>
-                )}
               </div>
             </button>
           );

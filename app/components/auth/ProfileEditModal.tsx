@@ -263,7 +263,7 @@ export function ProfileEditModal({ open, onClose, onUpdated }: ProfileEditModalP
             type="button"
             disabled={loading}
             onClick={handleSave}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-50"
+            className="rounded-md bg-blue-500 px-4 py-2 text-sm font-semibold text-white shadow-sm disabled:opacity-50"
           >
             {loading ? "保存中..." : "保存する"}
           </button>

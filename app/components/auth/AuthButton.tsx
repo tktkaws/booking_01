@@ -136,7 +136,7 @@ export function AuthButton() {
           <span className="truncate max-w-[12rem]">{displayName ?? email}</span>
           {depName && (
             <span
-              className="inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-semibold"
+              className="inline-flex items-center rounded-md px-2 py-0.5 font-semibold"
               style={{ backgroundColor: depColor ?? '#64748b', color: getTextColor(depColor ?? '#64748b') }}
             >
               {depName}
@@ -191,7 +191,7 @@ export function AuthButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+        className="rounded-md bg-blue-500 px-4 py-2 text-sm font-semibold text-white shadow-sm"
       >
         ログイン
       </button>
