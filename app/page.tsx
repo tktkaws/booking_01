@@ -13,6 +13,7 @@ import { DepartmentEditModal } from "@/components/modal/DepartmentEditModal";
 import { UserEditModal } from "@/components/modal/UserEditModal";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { AuthButton } from "@/components/auth/AuthButton";
+import { CalendarDays, ArrowLeft, ArrowRight } from 'lucide-react';
 // Supabase から profiles/departments を取得して表示用に利用
 import {
   addDays,
@@ -344,10 +345,15 @@ export default function Home() {
       const end = addDays(start, WORKING_DAY_COUNT - 1);
       return `${monthDayFormatter.format(start)}〜${monthDayFormatter.format(end)}`;
     }
-    if (view === "list") return "全予約一覧";
+    if (view === "list") {
+      const from = toDateKey(listFilterFrom).replaceAll("-", "/");
+      const to = listFilterTo ? toDateKey(listFilterTo).replaceAll("-", "/") : null;
+      return to ? `${from} ~ ${to}` : `${from} ~`;
+    }
     if (view === "users") return "ユーザー一覧";
+    if (view === "departments") return "部署一覧";
     return "";
-  }, [focusDate, view, weekReferenceDate]);
+  }, [focusDate, view, weekReferenceDate, listFilterFrom, listFilterTo]);
 
   const handlePrev = () => {
     if (view === "month") {
@@ -436,8 +442,6 @@ export default function Home() {
     setIsCreateModalOpen(true);
   };
 
-  // 共通部分は常に全幅表示にするため、main は全幅固定。
-  // ヘッダーを main の外に出すため、main は下側余白のみ。
   const mainClassName = cn("w-full px-6 pb-10", "max-w-none");
 
   const modalDate = selectedDate ?? focusDate;
@@ -453,68 +457,68 @@ export default function Home() {
   }, [sortedBookings, listFilterFrom, listFilterTo]);
 
   return (
-    <div className="min-h-screen bg-slate-100">
-      <header className="mb-8 px-6 pt-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-          <h1 className="text-2xl font-semibold text-slate-900">📅</h1>
-          <div className="flex flex-wrap gap-2">
-            {(
-              isAdmin
-                ? [...BASE_VIEW_OPTIONS, { key: "users" as ViewType, label: "ユーザー" }, { key: "departments" as ViewType, label: "部署" }]
-                : BASE_VIEW_OPTIONS
-            ).map(({ key, label }) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => handleViewChange(key)}
-                className={cn(
-                  "rounded border px-4 py-2 text-sm font-medium transition-colors",
-                  view === key
-                    ? "border-blue-500 bg-blue-500 text-white"
-                    : "border-slate-300 bg-white text-slate-600 hover:border-slate-400"
-                )}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
+    <div className="min-h-screen">
+      <header className="mb-6 px-6 pt-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-2xl font-semibold text-slate-900 flex items-center gap-2"><CalendarDays />予約</h1>
         <div className="flex items-center"><AuthButton /></div>
       </header>
       <main className={mainClassName}>
 
-        <div
-          className={cn(
-            "mb-6",
-            view === "list" ? "mx-auto w-full max-w-[1200px]" : ""
-          )}
-        >
-          <div className="flex flex-col-reverse gap-4 sm:flex-row sm:items-center sm:justify-between">
-            {view !== "list" && (
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handlePrev}
-                  className="rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-600 hover:border-slate-400"
-                >
-                  前へ
-                </button>
-                <button
-                  type="button"
-                  onClick={handleToday}
-                  className="rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-600 hover:border-slate-400"
-                >
-                  今日
-                </button>
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  className="rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-600 hover:border-slate-400"
-                >
-                  次へ
-                </button>
+        <div className={cn("mb-6")}>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-6">
+              <div className="flex flex-wrap gap-2">
+                {(
+                  isAdmin
+                    ? [...BASE_VIEW_OPTIONS, { key: "users" as ViewType, label: "ユーザー" }, { key: "departments" as ViewType, label: "部署" }]
+                    : BASE_VIEW_OPTIONS
+                ).map(({ key, label }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => handleViewChange(key)}
+                    className={cn(
+                      "rounded border px-4 py-2 text-sm font-medium transition-colors",
+                      view === key
+                        ? " bg-slate-800 text-white hover:bg-white hover:text-slate-800 focus:bg-white focus:text-slate-800"
+                        : "border-slate-300 text-slate-600 hover:ring-2"
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
-            )}
+              {view !== "list" && (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handlePrev}
+                    aria-label="前へ"
+                    className="rounded border border-slate-300 px-3 py-2 text-sm text-slate-600 hover:ring-2"
+                    title="前へ"
+                  >
+                    <span className="sr-only">前へ</span>
+                    <ArrowLeft />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleToday}
+                    className="rounded border border-slate-300 px-3 py-2 text-sm text-slate-600 hover:ring-2"
+                  >
+                    今日
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    aria-label="次へ"
+                    className="rounded border border-slate-300 px-3 py-2 text-sm text-slate-600 hover:ring-2"
+                    title="次へ"
+                  >
+                    <span className="sr-only">次へ</span>
+                    <ArrowRight />
+                  </button>
+                </div>
+              )}
               
               {view === "list" && (
                 <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -545,15 +549,19 @@ export default function Home() {
                   </label>
                 </div>
               )}
-              {isAuthed && (
-                <button
-                  type="button"
-                  onClick={() => handleOpenCreateModal()}
-                  className="ml-auto rounded-md bg-blue-500 px-4 py-2 text-sm font-semibold text-white shadow-sm"
-                >
-                  予約を作成
-                </button>
-              )}
+              <div className="text-sm font-semibold text-slate-700">
+                {viewLabel}
+              </div>
+            </div>
+            {isAuthed && (
+              <button
+                type="button"
+                onClick={() => handleOpenCreateModal()}
+                className="sm:ml-auto rounded bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-white hover:text-slate-800 focus:bg-white focus:text-slate-800"
+              >
+                予約を作成
+              </button>
+            )}
           </div>
         </div>
         {view === "month" && (
@@ -577,9 +585,7 @@ export default function Home() {
           />
         )}
         {view === "list" && (
-          <div className="mx-auto w-full max-w-[1200px] overflow-hidden">
-            <ListView bookings={filteredListBookings} onBookingClick={handleOpenDetail} />
-          </div>
+          <ListView bookings={filteredListBookings} onBookingClick={handleOpenDetail} />
         )}
         {view === "users" && isAdmin && (
           <div className="mx-auto w-full max-w-[1200px]">
