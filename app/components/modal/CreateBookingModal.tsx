@@ -8,6 +8,7 @@ import {
   type ChangeEvent,
   type FormEvent,
 } from "react";
+import { X } from 'lucide-react';
 
 import {
   formatMinutes,
@@ -295,7 +296,7 @@ export function CreateBookingModal({
   return (
     <dialog
       ref={dialogRef}
-      className="fixed left-1/2 top-1/2 max-h-[90vh] w-[min(720px,90vw)] -translate-x-1/2 -translate-y-1/2 transform rounded-xl border border-slate-200 bg-white p-0 text-slate-900 shadow-2xl backdrop:bg-slate-900/60"
+      className="fixed left-1/2 top-1/2 max-h-[90vh] w-[min(720px,90vw)] -translate-x-1/2 -translate-y-1/2 transform rounded-xl border border-slate-200 bg-white p-0 text-slate-900 shadow-2xl backdrop:bg-slate-800/60"
     >
       <form method="dialog" className="flex flex-col" onSubmit={handleSubmit}>
         <header className="flex items-start justify-between border-b border-slate-200 px-6 py-4">
@@ -307,10 +308,10 @@ export function CreateBookingModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 hover:border-slate-400"
+            className="inline-flex items-center justify-center rounded p-2 text-slate-600 hover:ring-2 hover:bg-slate-50"
             aria-label="モーダルを閉じる"
           >
-            閉じる
+            <X className="size-4" aria-hidden="true" />
           </button>
         </header>
         <div className="grid max-h-[70vh] grid-cols-1 overflow-y-auto px-6 py-6 sm:grid-cols-[48%_48%] justify-between">
@@ -323,7 +324,7 @@ export function CreateBookingModal({
                   name="date"
                   value={formState.date}
                   onChange={handleFieldChange}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-200"
                 />
               </label>
               <div className="flex flex-col gap-2 text-sm font-semibold text-slate-700">
@@ -457,7 +458,7 @@ export function CreateBookingModal({
                   name="title"
                   value={formState.title}
                   onChange={handleFieldChange}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-200"
                   placeholder="例: 9月度プロジェクト定例"
                 />
               </label>
@@ -469,7 +470,7 @@ export function CreateBookingModal({
                 value={formState.description}
                 onChange={handleFieldChange}
                 rows={4}
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-200"
                 placeholder="議題や参加者を記入してください"
               />
             </label>
@@ -508,13 +509,13 @@ export function CreateBookingModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 hover:border-slate-400"
+            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 hover:ring-2"
           >
             キャンセル
           </button>
           <button
             type="submit"
-            className="rounded-md bg-blue-500 px-4 py-2 text-sm font-semibold text-white shadow-sm"
+            className="rounded-md bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm"
           >
             保存する
           </button>

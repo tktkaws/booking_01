@@ -84,16 +84,17 @@ export function MonthView({
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div className="grid grid-cols-5 text-center text-xs font-semibold text-slate-600">
+    <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <div className="grid grid-cols-5 text-center text-xs font-semibold text-slate-600 border-b border-slate-200">
         {WORKING_DAY_INDICES.map((weekday) => (
           <div key={weekday} className="px-2 py-3">
             {weekdayLabelsFull[weekday]}
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-5 gap-px bg-slate-200 p-px">
-        {calendarDays.map((cellDate, index) => {
+      <div className="relative max-h-[calc(100vh-260px)] overflow-y-auto overflow-x-auto">
+        <div className="grid grid-cols-5 gap-px bg-slate-200 p-px">
+          {calendarDays.map((cellDate, index) => {
           const isCurrentMonth = cellDate.getMonth() === focusDate.getMonth();
           const isSelected = selectedDate ? isSameDay(cellDate, selectedDate) : false;
           const isToday = isSameDay(cellDate, today);
@@ -106,14 +107,16 @@ export function MonthView({
               type="button"
               onClick={() => handleDayClick(cellDate)}
               className={cn(
-                "flex min-h-32 flex-col gap-1 bg-white p-2 text-left transition shadow-sm",
+                "flex min-h-32 flex-col gap-1 bg-white p-2 text-left transition shadow-sm outline-none",
                 !isCurrentMonth && "bg-slate-50 text-slate-400",
                 isSelected && "border-blue-500 ring-2 ring-blue-200",
-                isToday && !isSelected && "border-blue-100"
+                isToday && !isSelected && "border-blue-100",
+                "focus-visible:ring-2 focus-visible:ring-blue-400",
+                "hover:ring-2 hover:ring-blue-400 hover:ring-offset-2 hover:ring-offset-white"
               )}
             >
-              <div className="flex items-center justify-between text-sm font-semibold">
-                <span className={cn(isToday ? "text-blue-600" : undefined)}>{cellDate.getDate()}</span>
+              <div className="flex items-center justify-between text-sm font-bold">
+                <span className={cn(isToday ? "bg-black text-white px-1 rounded" : undefined)}>{cellDate.getDate()}</span>
               </div>
               <div className="flex-1 min-h-0 flex flex-col gap-1 overflow-y-auto pr-1">
                 {dailyBookings.map((booking) => (
@@ -123,7 +126,7 @@ export function MonthView({
                     tabIndex={0}
                     onClick={(event) => handleBookingBadgeClick(event, booking)}
                     onKeyDown={(event) => handleBookingBadgeKeyDown(event, booking)}
-                    className="truncate rounded-md px-2 py-1 text-xs font-medium outline-none transition focus:ring-2 focus:ring-blue-200"
+                    className="truncate rounded-md px-2 py-1 text-xs font-medium outline-none transition focus:ring-2 focus:ring-blue-200 hover:ring-2 hover:ring-blue-200 hover:ring-offset-2 hover:ring-offset-white"
                     style={{
                       backgroundColor: booking.color,
                       color: booking.textColor,
@@ -138,7 +141,8 @@ export function MonthView({
               </div>
             </button>
           );
-        })}
+          })}
+        </div>
       </div>
     </div>
   );

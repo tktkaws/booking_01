@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { AuthModal } from "./AuthModal";
 import { ProfileEditModal } from "./ProfileEditModal";
+import { Settings } from 'lucide-react';
 
 export function AuthButton() {
   const supabase = getSupabaseBrowserClient();
@@ -130,23 +131,24 @@ export function AuthButton() {
         <button
           type="button"
           onClick={() => setProfileOpen(true)}
-          className="inline-flex items-center gap-2 rounded-md px-2 py-1 text-sm font-medium text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          className="px-3 py-1 inline-flex items-center gap-2 rounded-md px-2 py-1 text-sm font-medium text-slate-700 hover:ring-2"
           title={email ?? undefined}
         >
           <span className="truncate max-w-[12rem]">{displayName ?? email}</span>
           {depName && (
             <span
-              className="inline-flex items-center rounded-md px-2 py-0.5 font-semibold"
-              style={{ backgroundColor: depColor ?? '#64748b', color: getTextColor(depColor ?? '#64748b') }}
+              className="inline-flex items-center rounded-md py-0.5 font-semibold"
             >
+              &#40;
               {depName}
+              &#41;
             </span>
           )}
         </button>
         <button
           type="button"
           onClick={handleLogout}
-          className="rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-600 hover:border-slate-400"
+          className="rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-600 hover:ring-2"
         >
           ログアウト
         </button>
@@ -191,7 +193,7 @@ export function AuthButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded-md bg-blue-500 px-4 py-2 text-sm font-semibold text-white shadow-sm"
+        className="rounded-md bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm"
       >
         ログイン
       </button>

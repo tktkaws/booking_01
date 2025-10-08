@@ -78,17 +78,20 @@ export function WeekView({
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div className="grid grid-cols-[60px_repeat(5,minmax(0,1fr))] border-slate-200 text-xs font-semibold text-slate-600">
+      <div className="grid grid-cols-[60px_repeat(5,minmax(0,1fr))] text-xs font-semibold text-slate-600 border-b border-slate-200">
         <div className="px-3 py-3 text-right"></div>
         {weekDays.map((day) => {
           const isToday = isSameDay(day, new Date());
           return (
             <div
               key={day.toISOString()}
-              className="px-3 py-3 text-left flex items-baseline gap-2"
+              className="px-3 py-3 text-left flex justify-center items-baseline gap-2"
             >
-              <div className="text-slate-500">{weekdayLabelsFull[day.getDay()]}</div>
-              <div className={cn("text-sm font-semibold", isToday ? "text-blue-600" : "text-slate-700")}
+              <div className="text-slate-700">{weekdayLabelsFull[day.getDay()]}</div>
+              <div className={cn(
+                "text-sm",
+                isToday ? "bg-black text-white px-1 rounded" : "font-semibold"
+              )}
                 suppressHydrationWarning
               >
                 {monthDayFormatter.format(day)}
@@ -97,7 +100,8 @@ export function WeekView({
           );
         })}
       </div>
-      <div className="grid grid-cols-[60px_repeat(5,minmax(0,1fr))]">
+      <div className="relative max-h-[calc(100vh-260px)] overflow-y-auto overflow-x-auto">
+        <div className="grid grid-cols-[60px_repeat(5,minmax(0,1fr))]">
         <div className="flex flex-col text-xs text-slate-500">
           {timeLabels.map((label, index) => (
             <div
@@ -106,7 +110,7 @@ export function WeekView({
               style={{ height: SLOT_HEIGHT_PX }}
             >
               {index % 2 === 0 ? (
-                <span className="-mt-1.5 inline-block">{label}</span>
+                <span className={cn("-mt-1.5 inline-block", index === 0 && "opacity-0")}>{label}</span>
               ) : (
                 ""
               )}
@@ -145,7 +149,9 @@ export function WeekView({
                       onClick={(event) => handleBookingBlockClick(event, booking)}
                       onKeyDown={(event) => handleBookingBlockKeyDown(event, booking)}
                       className={cn(
-                        "z-10 pointer-events-auto h-full overflow-hidden rounded-md text-xs font-semibold shadow-sm outline-none transition focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 focus-visible:ring-offset-white mx-[1px]",
+                        "z-10 pointer-events-auto h-full overflow-hidden rounded-md text-xs font-semibold shadow-sm outline-none transition",
+                        "focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 focus-visible:ring-offset-white",
+                        "hover:ring-2 hover:ring-offset-2 hover:ring-blue-500 hover:ring-offset-white",
                         isSingleSlot ? "px-1.5 py-0.5" : "px-2 py-1"
                       )}
                       style={{
@@ -179,9 +185,10 @@ export function WeekView({
                       onCreateRequest(slotDate);
                     }}
                     className={cn(
-                      "border-b border-slate-100 text-left",
+                      "border-b border-slate-100 text-left outline-none transition",
                       index % 2 === 0 ? "bg-slate-50/80" : "bg-white",
-                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                      "focus-visible:ring-2 focus-visible:ring-blue-500",
+                      "hover:ring-2 hover:ring-blue-500 hover:ring-offset-2 hover:ring-offset-white"
                     )}
                     aria-label={`${monthDayFormatter.format(day)} ${label} に予約を作成`}
                   />
@@ -190,6 +197,7 @@ export function WeekView({
             </div>
           );
         })}
+        </div>
       </div>
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { X } from 'lucide-react';
 
 export type AdminUserRow = {
   id: string;
@@ -139,17 +140,17 @@ export function UserEditModal({ open, user, departments, onClose, onSaved }: Use
   return (
     <dialog
       ref={dialogRef}
-      className="fixed left-1/2 top-1/2 w-[min(560px,92vw)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-slate-200 bg-white p-0 text-slate-900 shadow-2xl backdrop:bg-slate-900/60"
+      className="fixed left-1/2 top-1/2 w-[min(560px,92vw)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-slate-200 bg-white p-0 text-slate-900 shadow-2xl backdrop:bg-slate-800/60"
     >
       <div className="flex flex-col">
         <header className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
           <h3 className="text-lg font-semibold">ユーザー編集</h3>
           <button
             type="button"
-            className="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-600 hover:border-slate-400"
+            className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white p-2 text-slate-600 hover:ring-2 hover:bg-slate-50"
             onClick={onClose}
           >
-            閉じる
+            <X className="size-4" aria-hidden="true" />
           </button>
         </header>
         <div className="space-y-4 px-6 py-5">
