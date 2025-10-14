@@ -173,10 +173,10 @@ export function AuthModal({ open, onClose, onSignedIn }: AuthModalProps) {
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex items-center rounded justify-center p-2 text-slate-600 hover:ring-2 hover:bg-slate-50"
+            className="inline-flex items-center justify-center rounded text-slate-600 hover:ring-2 hover:bg-slate-50"
             aria-label="モーダルを閉じる"
           >
-            <X className="size-4" aria-hidden="true" />
+            <X size={24} color="#0f172b" aria-hidden="true" />
           </button>
         </header>
         <div className="overflow-y-auto px-6 py-6">
