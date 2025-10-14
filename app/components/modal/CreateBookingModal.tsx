@@ -283,9 +283,7 @@ export function CreateBookingModal({
         });
         if (error) throw error;
       }
-      // 成功: 一覧更新イベントを通知し、成功メッセージ
       window.dispatchEvent(new CustomEvent("bookings:changed"));
-      alert("保存しました");
       onSaved?.();
       onClose();
     } catch (e: any) {
@@ -308,10 +306,10 @@ export function CreateBookingModal({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex items-center justify-center rounded p-2 text-slate-600 hover:ring-2 hover:bg-slate-50"
+            className="inline-flex items-center justify-center rounded text-slate-600 hover:ring-2 hover:bg-slate-50"
             aria-label="モーダルを閉じる"
           >
-            <X className="size-4" aria-hidden="true" />
+            <X size={24} color="#0f172b" aria-hidden="true" />
           </button>
         </header>
         <div className="grid max-h-[70vh] grid-cols-1 overflow-y-auto px-6 py-6 sm:grid-cols-[48%_48%] justify-between">
