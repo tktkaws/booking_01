@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  type KeyboardEvent,
-  type MouseEvent,
-} from "react";
+import { type MouseEvent } from "react";
 
 import {
   addDays,
@@ -52,22 +49,11 @@ export function MonthView({
   };
 
   const handleBookingBadgeClick = (
-    event: MouseEvent<HTMLDivElement>,
+    event: MouseEvent<HTMLButtonElement>,
     booking: ParsedBooking
   ) => {
     event.stopPropagation();
     handleBookingClick(booking);
-  };
-
-  const handleBookingBadgeKeyDown = (
-    event: KeyboardEvent<HTMLDivElement>,
-    booking: ParsedBooking
-  ) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      event.stopPropagation();
-      handleBookingClick(booking);
-    }
   };
 
   const monthStart = startOfMonth(focusDate);
@@ -85,7 +71,7 @@ export function MonthView({
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-      <div className="grid grid-cols-5 text-center text-xs font-semibold text-slate-600 border-b border-slate-200">
+      <div className="grid grid-cols-5 text-center text-xs font-semibold text-slate-800 border-b border-slate-200">
         {WORKING_DAY_INDICES.map((weekday) => (
           <div key={weekday} className="px-2 py-3">
             {weekdayLabelsFull[weekday]}
@@ -102,44 +88,57 @@ export function MonthView({
           const dailyBookings = bookingsByDate.get(dateKey) ?? [];
 
           return (
-            <button
+            <div
               key={dateKey + index}
-              type="button"
-              onClick={() => handleDayClick(cellDate)}
               className={cn(
-                "flex min-h-32 flex-col gap-1 bg-white p-2 text-left transition shadow-sm outline-none",
-                !isCurrentMonth && "bg-slate-50 text-slate-400",
-                isSelected && "border-blue-500 ring-2 ring-blue-200",
-                isToday && !isSelected && "border-blue-100",
-                "focus-visible:ring-2 focus-visible:ring-blue-400",
-                "hover:ring-2 hover:ring-blue-400 hover:ring-offset-2 hover:ring-offset-white"
+                "grid grid-rows-[2rem_1fr] min-h-32 bg-white text-left transition shadow-sm outline-none",
+                !isCurrentMonth && "bg-slate-50 text-slate-800",
+                isSelected && "ring-2 ring-blue-200",
+                isToday && !isSelected && "border-blue-100"
               )}
             >
-              <div className="flex items-center justify-between text-sm font-bold">
-                <span className={cn(isToday ? "bg-black text-white px-1 rounded" : undefined)}>{cellDate.getDate()}</span>
-              </div>
-              <div className="flex-1 min-h-0 flex flex-col gap-1 overflow-y-auto pr-1">
+              {/* 全面：当日用予約作成ボタン（カレンダーセル全体に被せる） */}
+              <button
+                onClick={() => handleDayClick(cellDate)}
+                className="row-span-full col-span-full grid justify-start w-full h-full rounded-none outline-none focus-visible:bg-slate-100/80 hover:bg-slate-100/80"             
+                aria-label={`${cellDate.getDate()}日の予約を作成`}
+              >
+                {/* 日付ラベル（上部は空ける） */}
+                <div className="text-sm font-bold m-1">
+                  <span className={cn(isToday ? "bg-black text-white px-1 rounded" : undefined)}>
+                    {cellDate.getDate()}
+                  </span>
+                </div>
+              </button>
+
+              {/* 前面：日付ラベルを避けて予約ボタンを配置 */}
+              <ul className="row-start-2 col-span-full h-fit my-1 mx-1 space-y-1">
                 {dailyBookings.map((booking) => (
-                  <div
+                  <li key={booking.id}>
+                    <button
                     key={booking.id}
-                    role="button"
-                    tabIndex={0}
                     onClick={(event) => handleBookingBadgeClick(event, booking)}
-                    onKeyDown={(event) => handleBookingBadgeKeyDown(event, booking)}
-                    className="truncate rounded-md px-2 py-1 text-xs font-medium outline-none transition focus:ring-2 focus:ring-blue-200 hover:ring-2 hover:ring-blue-200 hover:ring-offset-2 hover:ring-offset-white"
+                    className="z-10 w-full truncate rounded-md px-2 py-1 text-xs font-medium outline-none transition focus-visible:ring-2 hover:ring-2 text-left"
                     style={{
                       backgroundColor: booking.color,
                       color: booking.textColor,
                     }}
+                    title={booking.title}
                   >
                     <span className="mr-1 text-[10px] opacity-80">
                       {formatMinutes(booking.startMinutes)}
                     </span>
-                    <span className="truncate">{booking.title}</span>
-                  </div>
+                    <span className="truncate align-middle">{booking.title}</span>
+                  </button>
+
+                  </li>
+                  
                 ))}
+              </ul>
+              <div className="z-10 px-1 space-y-1">
+                
               </div>
-            </button>
+            </div>
           );
           })}
         </div>
