@@ -78,7 +78,7 @@ export function WeekView({
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div className="grid grid-cols-[60px_repeat(5,minmax(0,1fr))] text-xs font-semibold text-slate-600 border-b border-slate-200">
+      <div className="grid grid-cols-[60px_repeat(5,minmax(0,1fr))] text-xs font-semibold text-slate-800 border-b border-slate-200">
         <div className="px-3 py-3 text-right"></div>
         {weekDays.map((day) => {
           const isToday = isSameDay(day, new Date());
@@ -87,7 +87,7 @@ export function WeekView({
               key={day.toISOString()}
               className="px-3 py-3 text-left flex justify-center items-baseline gap-2"
             >
-              <div className="text-slate-700">{weekdayLabelsFull[day.getDay()]}</div>
+              <div className="text-slate-800">{weekdayLabelsFull[day.getDay()]}</div>
               <div className={cn(
                 "text-sm",
                 isToday ? "bg-black text-white px-1 rounded" : "font-semibold"
@@ -102,7 +102,7 @@ export function WeekView({
       </div>
       <div className="relative max-h-[calc(100vh-260px)] overflow-y-auto overflow-x-auto">
         <div className="grid grid-cols-[60px_repeat(5,minmax(0,1fr))]">
-        <div className="flex flex-col text-xs text-slate-500">
+        <div className="flex flex-col text-xs text-slate-800">
           {timeLabels.map((label, index) => (
             <div
               key={label + index}
@@ -149,9 +149,9 @@ export function WeekView({
                       onClick={(event) => handleBookingBlockClick(event, booking)}
                       onKeyDown={(event) => handleBookingBlockKeyDown(event, booking)}
                       className={cn(
-                        "z-10 pointer-events-auto h-full overflow-hidden rounded-md text-xs font-semibold shadow-sm outline-none transition",
-                        "focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 focus-visible:ring-offset-white",
-                        "hover:ring-2 hover:ring-offset-2 hover:ring-blue-500 hover:ring-offset-white",
+                        "z-10 pointer-events-auto h-full overflow-hidden rounded-md text-xs font-semibold shadow-sm outline-none transition mx-1",
+                        "focus-visible:ring-2",
+                        "hover:ring-2",
                         isSingleSlot ? "px-1.5 py-0.5" : "px-2 py-1"
                       )}
                       style={{
@@ -187,8 +187,8 @@ export function WeekView({
                     className={cn(
                       "border-b border-slate-100 text-left outline-none transition",
                       index % 2 === 0 ? "bg-slate-50/80" : "bg-white",
-                      "focus-visible:ring-2 focus-visible:ring-blue-500",
-                      "hover:ring-2 hover:ring-blue-500 hover:ring-offset-2 hover:ring-offset-white"
+                      "focus-visible:bg-slate-200/80",
+                      "hover:bg-slate-200/80"
                     )}
                     aria-label={`${monthDayFormatter.format(day)} ${label} に予約を作成`}
                   />

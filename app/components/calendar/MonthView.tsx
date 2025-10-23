@@ -29,6 +29,7 @@ type MonthViewProps = {
   onSelectDate: (date: Date) => void;
   onCreateRequest: (date: Date) => void;
   onBookingClick: (booking: ParsedBooking) => void;
+  isAuthed?: boolean;
 };
 
 export function MonthView({
@@ -38,6 +39,7 @@ export function MonthView({
   onSelectDate,
   onCreateRequest,
   onBookingClick,
+  isAuthed = false,
 }: MonthViewProps) {
   const handleDayClick = (date: Date) => {
     onSelectDate(date);
@@ -93,14 +95,16 @@ export function MonthView({
               className={cn(
                 "grid grid-rows-[2rem_1fr] min-h-32 bg-white text-left transition shadow-sm outline-none",
                 !isCurrentMonth && "bg-slate-50 text-slate-800",
-                isSelected && "ring-2 ring-blue-200",
-                isToday && !isSelected && "border-blue-100"
               )}
             >
               {/* 全面：当日用予約作成ボタン（カレンダーセル全体に被せる） */}
               <button
                 onClick={() => handleDayClick(cellDate)}
-                className="row-span-full col-span-full grid justify-start w-full h-full rounded-none outline-none focus-visible:bg-slate-100/80 hover:bg-slate-100/80"             
+                disabled={!isAuthed}
+                className={cn(
+                  "row-span-full col-span-full grid justify-start w-full h-full rounded-none outline-none",
+                  isAuthed ? "focus-visible:bg-slate-100/80 hover:bg-slate-100/80" : "opacity-60 cursor-not-allowed pointer-events-none"
+                )}
                 aria-label={`${cellDate.getDate()}日の予約を作成`}
               >
                 {/* 日付ラベル（上部は空ける） */}
@@ -118,7 +122,7 @@ export function MonthView({
                     <button
                     key={booking.id}
                     onClick={(event) => handleBookingBadgeClick(event, booking)}
-                    className="z-10 w-full truncate rounded-md px-2 py-1 text-xs font-medium outline-none transition focus-visible:ring-2 hover:ring-2 text-left"
+                    className="relative z-10 w-full truncate rounded-md px-2 py-1 text-xs font-medium outline-none transition focus-visible:ring-2 hover:ring-2 text-left"
                     style={{
                       backgroundColor: booking.color,
                       color: booking.textColor,
