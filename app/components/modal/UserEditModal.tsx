@@ -140,41 +140,41 @@ export function UserEditModal({ open, user, departments, onClose, onSaved }: Use
   return (
     <dialog
       ref={dialogRef}
-      className="fixed left-1/2 top-1/2 w-[min(560px,92vw)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-slate-200 bg-white p-0 text-slate-900 shadow-2xl backdrop:bg-slate-800/60"
+      className="fixed left-1/2 top-1/2 w-[min(560px,92vw)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-slate-200 bg-white p-0 text-slate-800 shadow-2xl backdrop:bg-slate-800/60"
     >
       <div className="flex flex-col">
         <header className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
           <h3 className="text-lg font-semibold">ユーザー編集</h3>
           <button
             type="button"
-            className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white p-2 text-slate-600 hover:ring-2 hover:bg-slate-50"
+            className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white p-2 text-slate-800 hover:ring-2 hover:bg-slate-50"
             onClick={onClose}
           >
             <X className="size-4" aria-hidden="true" />
           </button>
         </header>
         <div className="space-y-4 px-6 py-5">
-          <label className="block text-sm font-semibold text-slate-700">
+          <label className="block text-sm font-semibold text-slate-800">
             表示名
             <input
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-slate-300 px-3 h-9 grid items-center text-sm"
             />
           </label>
-          <label className="block text-sm font-semibold text-slate-700">
+          <label className="block text-sm font-semibold text-slate-800">
             部署
             <select
               value={departmentId}
               onChange={(e) => setDepartmentId(e.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-slate-300 px-3 h-9 grid items-center text-sm"
             >
               {deptOptions.map((d) => (
                 <option key={d.id} value={d.id}>{d.name}</option>
               ))}
             </select>
           </label>
-          <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+          <label className="flex items-center gap-2 text-sm font-semibold text-slate-800">
             <input
               type="checkbox"
               checked={isAdmin}
@@ -188,7 +188,7 @@ export function UserEditModal({ open, user, departments, onClose, onSaved }: Use
           )}
         </div>
         <div className="space-y-3 border-t border-slate-200 px-6 py-5">
-          <div className="text-sm font-semibold text-slate-700">部署ごとのカラー設定</div>
+          <div className="text-sm font-semibold text-slate-800">部署ごとのカラー設定</div>
           <div className="space-y-4">
             {deptOptions.map((d) => {
               const val = colorsByDept[d.id] ?? "";
@@ -196,7 +196,7 @@ export function UserEditModal({ open, user, departments, onClose, onSaved }: Use
               return (
                 <div key={d.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
                   <div className="grid grid-cols-[140px_auto_auto] items-center gap-3">
-                    <div className="text-sm font-semibold text-slate-700">{d.name}</div>
+                    <div className="text-sm font-semibold text-slate-800">{d.name}</div>
                     <input
                       type="color"
                       value={normalized || d.default_color || "#64748b"}
@@ -218,7 +218,7 @@ export function UserEditModal({ open, user, departments, onClose, onSaved }: Use
                         if (n) setColorsByDept((prev) => ({ ...prev, [d.id]: n }));
                       }}
                       placeholder={d.default_color || "#64748b"}
-                      className="w-44 rounded-md border border-slate-300 px-3 py-2 text-sm"
+                      className="w-44 rounded-md border border-slate-300 px-3 h-9 grid items-center text-sm"
                     />
                   </div>
                   <div className="mt-2 flex items-center gap-3">
@@ -227,7 +227,7 @@ export function UserEditModal({ open, user, departments, onClose, onSaved }: Use
                       style={{ backgroundColor: normalized || d.default_color || "#64748b" }}
                     />
                     {d.default_color && (
-                      <div className="text-xs text-slate-500">部署デフォルト: {d.default_color}</div>
+                      <div className="text-xs text-slate-800">部署デフォルト: {d.default_color}</div>
                     )}
                   </div>
                   <div className="pt-2">
@@ -240,7 +240,7 @@ export function UserEditModal({ open, user, departments, onClose, onSaved }: Use
                           return next;
                         });
                       }}
-                      className="rounded border border-slate-300 px-3 py-2 text-xs text-slate-600 hover:bg-white"
+                      className="rounded border border-slate-300 px-3 h-9 grid items-center text-xs text-slate-800 hover:bg-white"
                     >
                       デフォルトに戻す
                     </button>
@@ -255,7 +255,7 @@ export function UserEditModal({ open, user, departments, onClose, onSaved }: Use
             <button
               type="button"
               onClick={handleRestore}
-              className="rounded border border-emerald-200 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50"
+              className="rounded border border-emerald-200 px-4 h-9 grid items-center text-sm font-semibold text-emerald-700 hover:bg-emerald-50"
             >
               復元
             </button>
@@ -263,7 +263,7 @@ export function UserEditModal({ open, user, departments, onClose, onSaved }: Use
             <button
               type="button"
               onClick={handleDelete}
-              className="rounded border border-rose-200 px-4 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50"
+              className="rounded border border-rose-200 px-4 h-9 grid items-center text-sm font-semibold text-rose-600 hover:bg-rose-50"
             >
               削除
             </button>
@@ -271,7 +271,7 @@ export function UserEditModal({ open, user, departments, onClose, onSaved }: Use
           <button
             type="button"
             onClick={handleSave}
-            className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            className="rounded bg-blue-600 px-4 h-9 grid items-center text-sm font-semibold text-white hover:bg-blue-700"
           >
             保存
           </button>

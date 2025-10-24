@@ -46,8 +46,15 @@ export function CreateBookingModal({
   onSaved,
 }: CreateBookingModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const startDetailsRef = useRef<HTMLDetailsElement>(null);
-  const endDetailsRef = useRef<HTMLDetailsElement>(null);
+  const [openStartPicker, setOpenStartPicker] = useState(false);
+  const [openEndPicker, setOpenEndPicker] = useState(false);
+  const startPanelRef = useRef<HTMLDivElement>(null);
+  const endPanelRef = useRef<HTMLDivElement>(null);
+
+  const focusFirstOption = (panel: React.RefObject<HTMLDivElement>) => {
+    const el = panel.current?.querySelector('label:not(.cursor-not-allowed)') as HTMLLabelElement | null;
+    el?.focus();
+  };
 
   const dateKey = toDateKey(selectedDate);
 
@@ -115,6 +122,8 @@ export function CreateBookingModal({
       dialog.close("dismiss");
     }
   }, [open]);
+
+  
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -190,12 +199,8 @@ export function CreateBookingModal({
       }
       return next;
     });
-    if (name === "start") {
-      startDetailsRef.current?.removeAttribute("open");
-    }
-    if (name === "end") {
-      endDetailsRef.current?.removeAttribute("open");
-    }
+    if (name === "start") setOpenStartPicker(false);
+    if (name === "end") setOpenEndPicker(false);
   };
 
   // 2) 開始時間/日付変更時に重複チェック（可能なら）
@@ -294,9 +299,9 @@ export function CreateBookingModal({
   return (
     <dialog
       ref={dialogRef}
-      className="fixed left-1/2 top-1/2 max-h-[90vh] w-[min(720px,90vw)] -translate-x-1/2 -translate-y-1/2 transform rounded-xl border border-slate-200 bg-white p-0 text-slate-900 shadow-2xl backdrop:bg-slate-800/60"
+      className="fixed left-1/2 top-1/2 h-[60vh] max-h-[90vh] w-[min(720px,90vw)] -translate-x-1/2 -translate-y-1/2 transform rounded-xl border border-slate-200 bg-white p-0 text-slate-800 shadow-2xl backdrop:bg-slate-800/60"
     >
-      <form method="dialog" className="flex flex-col" onSubmit={handleSubmit}>
+      <form method="dialog" className="flex h-full flex-col" onSubmit={handleSubmit}>
         <header className="flex items-start justify-between border-b border-slate-200 px-6 py-4">
           <div>
             <h1 className="text-lg font-semibold">
@@ -306,126 +311,174 @@ export function CreateBookingModal({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex items-center justify-center rounded text-slate-600 hover:ring-2 hover:bg-slate-50"
+            className="inline-flex items-center justify-center rounded text-slate-800 hover:ring-2 hover:bg-slate-50"
             aria-label="モーダルを閉じる"
           >
             <X size={24} color="#0f172b" aria-hidden="true" />
           </button>
         </header>
-        <div className="grid max-h-[70vh] grid-cols-1 overflow-y-auto px-6 py-6 sm:grid-cols-[48%_48%] justify-between">
+        <div className="grid flex-1 grid-cols-1 overflow-y-auto px-6 py-6 sm:grid-cols-[48%_48%] justify-between">
           <section className="space-y-4">
             <div className="flex flex-col gap-4">
-              <label className="flex flex-col gap-1 text-sm font-semibold text-slate-700">
+              <label className="flex flex-col gap-1 text-sm font-semibold text-slate-800">
                 日付
                 <input
                   type="date"
                   name="date"
                   value={formState.date}
                   onChange={handleFieldChange}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  className="w-full rounded-md border border-slate-300 px-3 h-9 grid items-center text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-200"
                 />
               </label>
-              <div className="flex flex-col gap-2 text-sm font-semibold text-slate-700">
+              <div className="flex flex-col gap-2 text-sm font-semibold text-slate-800">
                 <span>開始</span>
-                <details
-                  ref={startDetailsRef}
-                  className="group relative"
-                  onToggle={(event) => {
-                    if (event.currentTarget.open) {
-                      endDetailsRef.current?.removeAttribute("open");
-                    }
-                  }}
-                >
-                  <summary className="flex w-full list-none items-center justify-between rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-200 hover:bg-blue-50/80 focus:outline-none focus:ring-2 focus:ring-blue-200 [&::-webkit-details-marker]:hidden">
+                <div className="relative">
+                  <button
+                    type="button"
+                    aria-haspopup="listbox"
+                    aria-expanded={openStartPicker}
+                    onClick={() => {
+                      setOpenStartPicker((v) => !v);
+                      setOpenEndPicker(false);
+                      setTimeout(() => focusFirstOption(startPanelRef), 0);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setOpenEndPicker(false);
+                        setOpenStartPicker(true);
+                        setTimeout(() => focusFirstOption(startPanelRef), 0);
+                      }
+                    }}
+                    className="flex w-full items-center justify-between rounded-md border border-slate-300 bg-white px-3 h-9 text-sm font-medium text-slate-800 transition hover:border-blue-200 hover:bg-blue-50/80 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  >
                     <span>{formState.start}</span>
-                    <span className="text-xs text-slate-500">変更</span>
-                  </summary>
-                  <div className="absolute left-0 top-full z-30 mt-2 hidden w-[min(360px,calc(100vw-5rem))] rounded-lg border border-slate-200 bg-white p-3 shadow-xl group-open:grid group-open:grid-cols-4 group-open:gap-2">
-                    {START_SLOTS.map((slot) => {
-                      const id = `start-${slot}`;
-                      const isSelected = formState.start === slot;
-                      return (
-                        <label
-                          key={id}
-                          htmlFor={id}
-                          className={cn(
-                            "cursor-pointer rounded-md border px-3 py-2 text-center text-xs font-semibold transition",
-                            isSelected
-                              ? "border-blue-500 bg-blue-50 text-blue-700 shadow"
-                              : "border-slate-300 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50/80"
-                          )}
-                        >
-                          <input
-                            id={id}
-                            type="radio"
-                            name="start"
-                            value={slot}
-                            checked={isSelected}
-                            onChange={handleFieldChange}
-                            className="sr-only"
-                          />
-                          {slot}
-                        </label>
-                      );
-                    })}
-                  </div>
-                </details>
+                  </button>
+                  {openStartPicker && (
+                    <div
+                      ref={startPanelRef}
+                      className="mt-2 w-full max-h-[200px] overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-xl flex flex-col gap-2"
+                    >
+                      {START_SLOTS.map((slot) => {
+                        const id = `start-${slot}`;
+                        const isSelected = formState.start === slot;
+                        return (
+                          <label
+                            key={id}
+                            htmlFor={id}
+                            className={cn(
+                              "cursor-pointer border-b px-3 py-2 grid items-center text-left text-sm font-semibold transition",
+                              isSelected
+                                ? "border-blue-500 bg-blue-50 text-blue-700 shadow"
+                                : "border-slate-300 bg-white text-slate-800 hover:border-blue-200 hover:bg-blue-50/80"
+                            )}
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                const input = document.getElementById(id) as HTMLInputElement | null;
+                                input?.click();
+                                if (isSelected) setOpenStartPicker(false);
+                              }
+                            }}
+                            onClick={() => {
+                              if (isSelected) setOpenStartPicker(false);
+                            }}
+                          >
+                            <input
+                              id={id}
+                              type="radio"
+                              name="start"
+                              value={slot}
+                              checked={isSelected}
+                              onChange={handleFieldChange}
+                              className="sr-only"
+                            />
+                            {slot}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="flex flex-col gap-2 text-sm font-semibold text-slate-700">
+              <div className="flex flex-col gap-2 text-sm font-semibold text-slate-800">
                 <span>終了</span>
-                <details
-                  ref={endDetailsRef}
-                  className="group relative"
-                  onToggle={(event) => {
-                    if (event.currentTarget.open) {
-                      startDetailsRef.current?.removeAttribute("open");
-                    }
-                  }}
-                >
-                  <summary className="flex w-full list-none items-center justify-between rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-200 hover:bg-blue-50/80 focus:outline-none focus:ring-2 focus:ring-blue-200 [&::-webkit-details-marker]:hidden">
+                <div className="relative">
+                  <button
+                    type="button"
+                    aria-haspopup="listbox"
+                    aria-expanded={openEndPicker}
+                    onClick={() => {
+                      setOpenEndPicker((v) => !v);
+                      setOpenStartPicker(false);
+                      setTimeout(() => focusFirstOption(endPanelRef), 0);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setOpenStartPicker(false);
+                        setOpenEndPicker(true);
+                        setTimeout(() => focusFirstOption(endPanelRef), 0);
+                      }
+                    }}
+                    className="flex w-full items-center justify-between rounded-md border border-slate-300 bg-white px-3 h-9 text-sm font-medium text-slate-800 transition hover:border-blue-200 hover:bg-blue-50/80 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  >
                     <span>{formState.end}</span>
-                    <span className="text-xs text-slate-500">変更</span>
-                  </summary>
-                  <div className="absolute left-0 top-full z-30 mt-2 hidden w-[min(360px,calc(100vw-5rem))] rounded-lg border border-slate-200 bg-white p-3 shadow-xl group-open:grid group-open:grid-cols-4 group-open:gap-2">
-                    {TIME_SLOTS.map((slot) => {
-                      const id = `end-${slot}`;
-                      const isSelected = formState.end === slot;
-                      const isDisabled = slot <= formState.start; // 3) 開始時間以前は選択不可
-                      return (
-                        <label
-                          key={id}
-                          htmlFor={id}
-                          className={cn(
-                            "cursor-pointer rounded-md border px-3 py-2 text-center text-xs font-semibold transition",
-                            isDisabled
-                              ? "cursor-not-allowed border-slate-200 bg-slate-50 text-slate-300"
-                              : isSelected
-                              ? "border-blue-500 bg-blue-50 text-blue-700 shadow"
-                              : "border-slate-300 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50/80"
-                          )}
-                        >
-                          <input
-                            id={id}
-                            type="radio"
-                            name="end"
-                            value={slot}
-                            checked={isSelected}
-                            onChange={handleFieldChange}
-                            disabled={isDisabled}
-                            className="sr-only"
-                          />
-                          {slot}
-                        </label>
-                      );
-                    })}
-                  </div>
-                </details>
+                  </button>
+                  {openEndPicker && (
+                    <div
+                      ref={endPanelRef}
+                      className="mt-2 w-full max-h-[200px] overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-xl flex flex-col gap-2"
+                    >
+                      {TIME_SLOTS.filter((slot) => slot > formState.start).map((slot) => {
+                        const id = `end-${slot}`;
+                        const isSelected = formState.end === slot;
+                        return (
+                          <label
+                            key={id}
+                            htmlFor={id}
+                            className={cn(
+                              "cursor-pointer border-b px-3 py-2 grid items-center text-left text-sm font-semibold transition",
+                              isSelected
+                                ? "border-blue-500 bg-blue-50 text-blue-700 shadow"
+                                : "border-slate-300 bg-white text-slate-800 hover:border-blue-200 hover:bg-blue-50/80"
+                            )}
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                const input = document.getElementById(id) as HTMLInputElement | null;
+                                input?.click();
+                                if (isSelected) setOpenEndPicker(false);
+                              }
+                            }}
+                            onClick={() => {
+                              if (isSelected) setOpenEndPicker(false);
+                            }}
+                          >
+                            <input
+                              id={id}
+                              type="radio"
+                              name="end"
+                              value={slot}
+                              checked={isSelected}
+                              onChange={handleFieldChange}
+                              className="sr-only"
+                            />
+                            {slot}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
               <p
                 className={cn(
                   "text-xs",
                   checkingConflict
-                    ? "text-slate-500"
+                    ? "text-slate-800"
                     : hasConflict
                     ? "text-red-600"
                     : "text-emerald-600"
@@ -438,7 +491,7 @@ export function CreateBookingModal({
                   : "予約可能です"}
               </p>
             </div>
-            <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+            <label className="flex items-center gap-2 text-sm font-semibold text-slate-800">
               <input
                 type="checkbox"
                 name="isCompanyWide"
@@ -449,37 +502,37 @@ export function CreateBookingModal({
               全社共有として表示する
             </label>
             <div className="space-y-2">
-              <label className="flex flex-col gap-1 text-sm font-semibold text-slate-700">
+              <label className="flex flex-col gap-1 text-sm font-semibold text-slate-800">
                 件名
                 <input
                   required
                   name="title"
                   value={formState.title}
                   onChange={handleFieldChange}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  className="w-full rounded-md border border-slate-300 px-3 h-9 grid items-center text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-200"
                   placeholder="例: 9月度プロジェクト定例"
                 />
               </label>
             </div>
-            <label className="flex flex-col gap-1 text-sm font-semibold text-slate-700">
+            <label className="flex flex-col gap-1 text-sm font-semibold text-slate-800">
               メモ
               <textarea
                 name="description"
                 value={formState.description}
                 onChange={handleFieldChange}
                 rows={4}
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                className="w-full rounded-md border border-slate-300 px-3 h-9 grid items-center text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-200"
                 placeholder="議題や参加者を記入してください"
               />
             </label>
           </section>
-          <section className="space-y-2">
-            <h3 className="text-sm font-semibold text-slate-700">
+          <section className="space-y-2 mt-6 sm:mt-0">
+            <h3 className="text-sm font-semibold text-slate-800">
               {monthDayFormatter.format(formDate)} の予約状況
             </h3>
             <div className="space-y-2">
               {dailyBookings.length === 0 && (
-                <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 h-9 grid items-center text-xs text-slate-800">
                   登録済みの予約はありません。
                 </p>
               )}
@@ -503,17 +556,17 @@ export function CreateBookingModal({
             </div>
           </section>
         </div>
-        <footer className="flex justify-end gap-3 border-t border-slate-200 px-6 py-4">
+        <footer className="sticky bottom-0 flex justify-end gap-3 border-t border-slate-200 bg-white px-6 py-4">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 hover:ring-2"
+            className="rounded-md border border-slate-300 px-4 h-9 grid items-center text-sm font-semibold text-slate-800 hover:ring-2"
           >
             キャンセル
           </button>
           <button
             type="submit"
-            className="rounded-md bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm"
+            className="rounded-md bg-slate-800 px-4 h-9 grid items-center text-sm font-semibold text-white shadow-sm"
           >
             保存する
           </button>

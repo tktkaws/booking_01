@@ -91,7 +91,7 @@ export function DepartmentEditModal({ open, department, onClose, onSaved }: Depa
   return (
     <dialog
       ref={dialogRef}
-      className="fixed left-1/2 top-1/2 w-[min(520px,92vw)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-slate-200 bg-white p-0 text-slate-900 shadow-2xl backdrop:bg-slate-800/60"
+      className="fixed left-1/2 top-1/2 w-[min(520px,92vw)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-slate-200 bg-white p-0 text-slate-800 shadow-2xl backdrop:bg-slate-800/60"
     >
       <div className="flex flex-col">
         <header className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
@@ -99,23 +99,23 @@ export function DepartmentEditModal({ open, department, onClose, onSaved }: Depa
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white p-2 text-slate-600 hover:ring-2 hover:bg-slate-50"
+            className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white p-2 text-slate-800 hover:ring-2 hover:bg-slate-50"
           >
             <X className="size-4" aria-hidden="true" />
           </button>
         </header>
         <div className="space-y-4 px-6 py-5">
-          <label className="block text-sm font-semibold text-slate-700">
+          <label className="block text-sm font-semibold text-slate-800">
             部署名
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-slate-300 px-3 h-9 grid items-center text-sm"
               placeholder="営業部"
             />
           </label>
           <div className="grid grid-cols-[auto_1fr] items-center gap-3">
-            <label className="text-sm font-semibold text-slate-700">カラー</label>
+            <label className="text-sm font-semibold text-slate-800">カラー</label>
             <div className="flex items-center gap-3">
               <input
                 type="color"
@@ -133,7 +133,7 @@ export function DepartmentEditModal({ open, department, onClose, onSaved }: Depa
                   if (n) setColorText(n);
                 }}
                 placeholder="#64748b"
-                className="w-40 rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className="w-40 rounded-md border border-slate-300 px-3 h-9 grid items-center text-sm"
               />
               <span className="inline-flex h-6 w-6 rounded-full border border-slate-300" style={{ backgroundColor: normalizeHex(colorText) ?? "#64748b" }} />
             </div>
@@ -143,14 +143,14 @@ export function DepartmentEditModal({ open, department, onClose, onSaved }: Depa
           <button
             type="button"
             onClick={onClose}
-            className="rounded border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 hover:ring-2"
+            className="rounded border border-slate-300 px-4 h-9 grid items-center text-sm font-semibold text-slate-800 hover:ring-2"
           >
             キャンセル
           </button>
           <button
             type="button"
             onClick={handleSave}
-            className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            className="rounded bg-blue-600 px-4 h-9 grid items-center text-sm font-semibold text-white hover:bg-blue-700"
           >
             保存
           </button>
