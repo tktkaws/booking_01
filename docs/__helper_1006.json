@@ -1,0 +1,12 @@
+[
+  {
+    "schema": "public",
+    "proname": "viewer_department",
+    "ddl": "CREATE OR REPLACE FUNCTION public.viewer_department()\n RETURNS uuid\n LANGUAGE sql\n STABLE\nAS $function$\r\n  select (\r\n    select p.department_id from public.profiles p where p.id = auth.uid()\r\n  );\r\n$function$\n"
+  },
+  {
+    "schema": "public",
+    "proname": "viewer_is_admin",
+    "ddl": "CREATE OR REPLACE FUNCTION public.viewer_is_admin()\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$                                                                            \r\nselect coalesce(                                                                 \r\n    (select p.is_admin from public.profiles p where p.id = auth.uid()),          \r\n    false                                                                        \r\n)                                                                                \r\n$function$\n"
+  }
+]

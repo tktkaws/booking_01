@@ -1,0 +1,210 @@
+[
+  {
+    "table_name": "bookings",
+    "ordinal_position": 1,
+    "column_name": "id",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "bookings",
+    "ordinal_position": 2,
+    "column_name": "title",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "bookings",
+    "ordinal_position": 3,
+    "column_name": "description",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": "''::text"
+  },
+  {
+    "table_name": "bookings",
+    "ordinal_position": 4,
+    "column_name": "start_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "bookings",
+    "ordinal_position": 5,
+    "column_name": "end_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "bookings",
+    "ordinal_position": 6,
+    "column_name": "created_by",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "bookings",
+    "ordinal_position": 8,
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "bookings",
+    "ordinal_position": 9,
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "departments",
+    "ordinal_position": 1,
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "departments",
+    "ordinal_position": 2,
+    "column_name": "name",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "departments",
+    "ordinal_position": 3,
+    "column_name": "default_color",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": "'#64748b'::text"
+  },
+  {
+    "table_name": "departments",
+    "ordinal_position": 4,
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "departments",
+    "ordinal_position": 5,
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "profiles",
+    "ordinal_position": 1,
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "ordinal_position": 2,
+    "column_name": "display_name",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "ordinal_position": 3,
+    "column_name": "department_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "ordinal_position": 4,
+    "column_name": "color_settings",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": "''::text"
+  },
+  {
+    "table_name": "profiles",
+    "ordinal_position": 5,
+    "column_name": "is_admin",
+    "data_type": "boolean",
+    "is_nullable": "NO",
+    "column_default": "false"
+  },
+  {
+    "table_name": "profiles",
+    "ordinal_position": 6,
+    "column_name": "deleted_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "ordinal_position": 7,
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "profiles",
+    "ordinal_position": 8,
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "profiles_public",
+    "ordinal_position": 1,
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles_public",
+    "ordinal_position": 2,
+    "column_name": "display_name",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles_public",
+    "ordinal_position": 3,
+    "column_name": "department_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles_public",
+    "ordinal_position": 4,
+    "column_name": "department_name",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles_public",
+    "ordinal_position": 5,
+    "column_name": "color_settings",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  }
+]

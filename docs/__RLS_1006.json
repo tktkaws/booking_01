@@ -1,0 +1,82 @@
+[
+  {
+    "schemaname": "public",
+    "tablename": "bookings",
+    "policyname": "bookings_delete_owner_or_admin",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "DELETE",
+    "qual": "(viewer_is_admin() OR (created_by = auth.uid()))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "bookings",
+    "policyname": "bookings_insert_authenticated",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "((auth.uid() IS NOT NULL) AND (created_by = auth.uid()))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "bookings",
+    "policyname": "bookings_select_all",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "bookings",
+    "policyname": "bookings_update_owner_or_admin",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "(viewer_is_admin() OR (created_by = auth.uid()))",
+    "with_check": "(viewer_is_admin() OR (created_by = auth.uid()))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "policyname": "profiles_admin_write",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "viewer_is_admin()",
+    "with_check": "viewer_is_admin()"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "policyname": "profiles_insert_self",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(id = auth.uid())"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "policyname": "profiles_select_self_or_admin",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "((id = auth.uid()) OR viewer_is_admin())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "policyname": "profiles_update_self",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "(id = auth.uid())",
+    "with_check": "(id = auth.uid())"
+  }
+]
