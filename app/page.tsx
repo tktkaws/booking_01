@@ -336,24 +336,45 @@ export default function Home() {
 
   const weekReferenceDate = selectedDate ?? focusDate;
 
+  // md 以下ではリスト表示のみ
+  const [isMdDown, setIsMdDown] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(max-width: 767.98px)");
+    const onChange = (e: MediaQueryListEvent | MediaQueryList) => {
+      setIsMdDown(("matches" in e ? e.matches : (e as MediaQueryList).matches));
+    };
+    onChange(mq);
+    mq.addEventListener?.("change", onChange as any);
+    // @ts-expect-error: for older browsers
+    mq.addListener?.(onChange as any);
+    return () => {
+      mq.removeEventListener?.("change", onChange as any);
+      // @ts-expect-error: for older browsers
+      mq.removeListener?.(onChange as any);
+    };
+  }, []);
+  const effectiveView: ViewType = isMdDown ? "list" : view;
+
   const viewLabel = useMemo(() => {
-    if (view === "month") {
+    const v = effectiveView;
+    if (v === "month") {
       return monthFormatter.format(focusDate);
     }
-    if (view === "week") {
+    if (v === "week") {
       const start = startOfWeek(weekReferenceDate);
       const end = addDays(start, WORKING_DAY_COUNT - 1);
       return `${monthDayFormatter.format(start)}〜${monthDayFormatter.format(end)}`;
     }
-    if (view === "list") {
+    if (v === "list") {
       const from = toDateKey(listFilterFrom).replaceAll("-", "/");
       const to = listFilterTo ? toDateKey(listFilterTo).replaceAll("-", "/") : null;
       return to ? `${from} ~ ${to}` : `${from} ~`;
     }
-    if (view === "users") return "ユーザー一覧";
-    if (view === "departments") return "部署一覧";
+    if (v === "users") return "ユーザー一覧";
+    if (v === "departments") return "部署一覧";
     return "";
-  }, [focusDate, view, weekReferenceDate, listFilterFrom, listFilterTo]);
+  }, [focusDate, effectiveView, weekReferenceDate, listFilterFrom, listFilterTo]);
 
   const handlePrev = () => {
     if (view === "month") {
@@ -400,6 +421,7 @@ export default function Home() {
   };
 
   const handleOpenCreateModal = (date?: Date) => {
+    if (!isAuthed) return;
     if (date) {
       const normalized = stripTime(date);
       setSelectedDate(normalized);
@@ -458,52 +480,52 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
-      <header className="mb-6 px-6 pt-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-2xl font-semibold text-slate-900 flex items-center gap-2"><CalendarDays />予約</h1>
+      <header className="mb-6 px-6 pt-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <h1 className="text-2xl font-semibold text-slate-800 flex items-center gap-2"><CalendarDays />予約</h1>
         <div className="flex items-center"><AuthButton /></div>
       </header>
       <main className={mainClassName}>
 
         <div className={cn("mb-6")}>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap items-center gap-6">
-              <div className="flex flex-wrap gap-2">
-                {(
-                  isAdmin
-                    ? [...BASE_VIEW_OPTIONS, { key: "users" as ViewType, label: "ユーザー" }, { key: "departments" as ViewType, label: "部署" }]
-                    : BASE_VIEW_OPTIONS
-                ).map(({ key, label }) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => handleViewChange(key)}
-                    className={cn(
-                      "rounded border px-4 py-2 text-sm font-medium transition-colors",
+          <div className="flex flex-row items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-6">
+            <div className="hidden md:flex flex-wrap gap-2">
+              {(
+                isAdmin
+                  ? [...BASE_VIEW_OPTIONS, { key: "users" as ViewType, label: "ユーザー" }, { key: "departments" as ViewType, label: "部署" }]
+                  : BASE_VIEW_OPTIONS
+              ).map(({ key, label }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => handleViewChange(key)}
+                  className={cn(
+                    "rounded border px-4 h-9 grid items-center  text-sm font-medium transition-colors",
                       view === key
-                        ? " bg-slate-800 text-white hover:bg-white hover:text-slate-800 focus:bg-white focus:text-slate-800"
-                        : "border-slate-300 text-slate-600 hover:ring-2"
+                        ? " bg-slate-800 text-white hover:bg-white hover:ring-2 hover:text-slate-800 focus-visible:bg-white focus-visible:text-slate-800"
+                        : "border-slate-300 text-slate-800 hover:ring-2"
                     )}
                   >
                     {label}
                   </button>
                 ))}
               </div>
-              {view !== "list" && (
+              {effectiveView !== "list" && (
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={handlePrev}
                     aria-label="前へ"
-                    className="rounded border border-slate-300 px-3 py-2 text-sm text-slate-600 hover:ring-2"
+                    className="rounded border border-slate-300 px-2 h-9 grid items-center text-sm text-slate-800 hover:ring-2"
                     title="前へ"
                   >
                     <span className="sr-only">前へ</span>
-                    <ArrowLeft />
+                    <ArrowLeft size={20}/>
                   </button>
                   <button
                     type="button"
                     onClick={handleToday}
-                    className="rounded border border-slate-300 px-3 py-2 text-sm text-slate-600 hover:ring-2"
+                    className="rounded border border-slate-300 px-3 h-9 grid items-center text-sm text-slate-800 hover:ring-2"
                   >
                     今日
                   </button>
@@ -511,19 +533,19 @@ export default function Home() {
                     type="button"
                     onClick={handleNext}
                     aria-label="次へ"
-                    className="rounded border border-slate-300 px-3 py-2 text-sm text-slate-600 hover:ring-2"
+                    className="rounded border border-slate-300 px-2 h-9 grid items-center  text-sm text-slate-800 hover:ring-2"
                     title="次へ"
                   >
                     <span className="sr-only">次へ</span>
-                    <ArrowRight />
+                    <ArrowRight size={20} />
                   </button>
                 </div>
               )}
               
-              {view === "list" && (
+              {effectiveView === "list" && (
                 <div className="flex flex-wrap items-center gap-2 text-sm">
                   <label className="flex items-center gap-1">
-                    <span className="text-xs text-slate-500">開始</span>
+                    <span className="text-xs text-slate-800 font-bold">開始</span>
                     <input
                       type="date"
                       value={toDateKey(listFilterFrom)}
@@ -531,11 +553,11 @@ export default function Home() {
                         const v = e.target.value;
                         if (v) setListFilterFrom(parseDateOnly(`${v}T00:00:00+00:00`));
                       }}
-                      className="rounded border border-slate-300 bg-white px-3 py-2"
+                      className="rounded border border-slate-300 bg-white px-3 h-9 grid items-center"
                     />
                   </label>
-                  <label className="flex items-center gap-1">
-                    <span className="text-xs text-slate-500">終了</span>
+                  <label className="hidden lg:flex items-center gap-1">
+                    <span className="text-xs text-slate-800 font-bold">終了</span>
                     <input
                       type="date"
                       value={listFilterTo ? toDateKey(listFilterTo) : ""}
@@ -544,12 +566,12 @@ export default function Home() {
                         if (v) setListFilterTo(parseDateOnly(`${v}T00:00:00+00:00`));
                         else setListFilterTo(null);
                       }}
-                      className="rounded border border-slate-300 bg-white px-3 py-2"
+                      className="rounded border border-slate-300 bg-white px-3 h-9 grid items-center"
                     />
                   </label>
                 </div>
               )}
-              <div className="text-sm font-semibold text-slate-700">
+              <div className="hidden lg:block text-sm font-semibold text-slate-800">
                 {viewLabel}
               </div>
             </div>
@@ -557,14 +579,14 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => handleOpenCreateModal()}
-                className="sm:ml-auto rounded bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-white hover:text-slate-800 focus:bg-white focus:text-slate-800"
+                className="w-20 rounded bg-slate-800 h-9 items-center text-sm font-semibold text-white hover:ring-2 hover:bg-white hover:text-slate-800 focus-visible:bg-white focus-visible:text-slate-800"
               >
-                予約を作成
+                予約作成
               </button>
             )}
           </div>
         </div>
-        {view === "month" && (
+        {effectiveView === "month" && (
           <MonthView
             focusDate={focusDate}
             selectedDate={selectedDate}
@@ -572,9 +594,10 @@ export default function Home() {
             onSelectDate={handleSelectDate}
             onCreateRequest={handleOpenCreateModal}
             onBookingClick={handleOpenDetail}
+            isAuthed={isAuthed}
           />
         )}
-        {view === "week" && (
+        {effectiveView === "week" && (
           <WeekView
             referenceDate={weekReferenceDate}
             selectedDate={selectedDate}
@@ -584,10 +607,10 @@ export default function Home() {
             onBookingClick={handleOpenDetail}
           />
         )}
-        {view === "list" && (
+        {effectiveView === "list" && (
           <ListView bookings={filteredListBookings} onBookingClick={handleOpenDetail} />
         )}
-        {view === "users" && isAdmin && (
+        {effectiveView === "users" && isAdmin && (
           <div className="mx-auto w-full max-w-[1200px]">
             <UsersList
               users={users}
@@ -598,7 +621,7 @@ export default function Home() {
             />
           </div>
         )}
-        {view === "departments" && isAdmin && (
+        {effectiveView === "departments" && isAdmin && (
           <div className="mx-auto w-full max-w-[1200px]">
             <DepartmentsList
               departments={Array.from(depMap.values()).sort((a,b)=>a.name.localeCompare(b.name))}
