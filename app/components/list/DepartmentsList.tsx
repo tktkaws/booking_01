@@ -16,7 +16,7 @@ export function DepartmentsList({ departments, onCreate, onEdit }: DepartmentsLi
         <button
           type="button"
           onClick={onCreate}
-          className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+          className="rounded-md bg-blue-600 px-3 h-9 grid items-center text-sm font-semibold text-white hover:bg-blue-700"
         >
           新規作成
         </button>
@@ -31,13 +31,13 @@ export function DepartmentsList({ departments, onCreate, onEdit }: DepartmentsLi
           >
             <div className="flex items-center gap-3">
               <span className="inline-flex h-4 w-4 rounded-full border border-slate-300" style={{ backgroundColor: d.default_color }} />
-              <span className="text-sm font-medium text-slate-900">{d.name}</span>
+              <span className="text-sm font-medium text-slate-800">{d.name}</span>
             </div>
-            <span className="text-xs text-slate-400">編集</span>
+            <span className="text-xs text-slate-800">編集</span>
           </button>
         ))}
         {departments.length === 0 && (
-          <div className="px-3 py-6 text-center text-sm text-slate-500">部署がありません</div>
+          <div className="px-3 py-6 text-center text-sm text-slate-800">部署がありません</div>
         )}
       </div>
     </div>

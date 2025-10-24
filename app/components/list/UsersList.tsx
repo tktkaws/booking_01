@@ -21,7 +21,7 @@ export function UsersList({ users, onUserClick }: UsersListProps) {
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between pb-3">
         <h2 className="text-lg font-semibold text-slate-800">ユーザー一覧</h2>
-        <div className="text-xs text-slate-500">{users.length} 件</div>
+        <div className="text-xs text-slate-800">{users.length} 件</div>
       </div>
       <div className="grid grid-cols-1 divide-y divide-slate-200">
         {users.map((u) => (
@@ -36,7 +36,7 @@ export function UsersList({ users, onUserClick }: UsersListProps) {
             aria-label={`${u.display_name} を編集`}
           >
             <div className="min-w-0">
-              <div className="truncate text-sm font-medium text-slate-900">
+              <div className="truncate text-sm font-medium text-slate-800">
                 {u.display_name}
                 {u.is_admin && (
                   <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">管理者</span>
@@ -45,11 +45,11 @@ export function UsersList({ users, onUserClick }: UsersListProps) {
                   <span className="ml-2 rounded-full bg-rose-100 px-2 py-0.5 text-xs font-semibold text-rose-700">削除済み</span>
                 )}
               </div>
-              <div className="truncate text-xs text-slate-500">
+              <div className="truncate text-xs text-slate-800">
                 {u.department_name ?? u.department_id}
               </div>
             </div>
-            <div className="text-xs text-slate-400">編集</div>
+            <div className="text-xs text-slate-800">編集</div>
           </button>
         ))}
       </div>
