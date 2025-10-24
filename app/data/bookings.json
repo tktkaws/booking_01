@@ -2,241 +2,361 @@
   {
     "id": "bk-001",
     "title": "プロジェクトキックオフ",
-    "room": "A-101",
-    "department": "プロダクト",
-    "owner": "佐藤 太郎",
     "start": "2024-09-01T09:00:00+09:00",
     "end": "2024-09-01T10:30:00+09:00",
     "isCompanyWide": true,
-    "color": "#2563eb",
-    "textColor": "#ffffff"
+    "departmentId": "dep-03",
+    "ownerUserId": "usr-01"
   },
   {
     "id": "bk-002",
     "title": "UXレビュー",
-    "room": "B-202",
-    "department": "デザイン",
-    "owner": "田中 花子",
     "start": "2024-09-01T11:00:00+09:00",
     "end": "2024-09-01T12:00:00+09:00",
     "isCompanyWide": false,
-    "color": "#ec4899",
-    "textColor": "#ffffff"
+    "departmentId": "dep-03",
+    "ownerUserId": "usr-02"
   },
   {
     "id": "bk-003",
     "title": "営業戦略会議",
-    "room": "C-303",
-    "department": "営業",
-    "owner": "鈴木 次郎",
     "start": "2024-09-01T15:00:00+09:00",
     "end": "2024-09-01T16:30:00+09:00",
     "isCompanyWide": false,
-    "color": "#f97316",
-    "textColor": "#1f2937"
+    "departmentId": "dep-02",
+    "ownerUserId": "usr-03"
   },
   {
     "id": "bk-004",
     "title": "開発定例",
-    "room": "A-101",
-    "department": "開発",
-    "owner": "中村 拓也",
     "start": "2024-09-02T09:30:00+09:00",
     "end": "2024-09-02T10:30:00+09:00",
     "isCompanyWide": false,
-    "color": "#10b981",
-    "textColor": "#083344"
+    "departmentId": "dep-03",
+    "ownerUserId": "usr-04"
   },
   {
     "id": "bk-005",
     "title": "採用面談",
-    "room": "B-202",
-    "department": "人事",
-    "owner": "高橋 由美",
     "start": "2024-09-02T13:00:00+09:00",
     "end": "2024-09-02T14:00:00+09:00",
     "isCompanyWide": false,
-    "color": "#a855f7",
-    "textColor": "#ffffff"
+    "departmentId": "dep-01",
+    "ownerUserId": "usr-05"
   },
   {
     "id": "bk-006",
     "title": "サーバーメンテナンス準備",
-    "room": "D-404",
-    "department": "インフラ",
-    "owner": "小林 健",
     "start": "2024-09-02T16:00:00+09:00",
     "end": "2024-09-02T17:30:00+09:00",
     "isCompanyWide": false,
-    "color": "#0ea5e9",
-    "textColor": "#0f172a"
+    "departmentId": "dep-03",
+    "ownerUserId": "usr-06"
   },
   {
     "id": "bk-007",
     "title": "マーケティング方針共有",
-    "room": "A-101",
-    "department": "マーケ",
-    "owner": "伊藤 美咲",
     "start": "2024-09-03T10:00:00+09:00",
     "end": "2024-09-03T11:30:00+09:00",
     "isCompanyWide": false,
-    "color": "#f59e0b",
-    "textColor": "#1f2937"
+    "departmentId": "dep-02",
+    "ownerUserId": "usr-07"
   },
   {
     "id": "bk-008",
     "title": "CS ナレッジ共有",
-    "room": "C-303",
-    "department": "カスタマーサクセス",
-    "owner": "山田 真",
     "start": "2024-09-03T15:30:00+09:00",
     "end": "2024-09-03T16:30:00+09:00",
     "isCompanyWide": false,
-    "color": "#22c55e",
-    "textColor": "#052e16"
+    "departmentId": "dep-02",
+    "ownerUserId": "usr-08"
   },
   {
     "id": "bk-009",
     "title": "全社会議リハーサル",
-    "room": "ホール",
-    "department": "広報",
-    "owner": "松本 彩",
     "start": "2024-09-04T14:00:00+09:00",
     "end": "2024-09-04T15:30:00+09:00",
     "isCompanyWide": true,
-    "color": "#ef4444",
-    "textColor": "#ffffff"
+    "departmentId": "dep-01",
+    "ownerUserId": "usr-09"
   },
   {
     "id": "bk-010",
     "title": "法務確認ミーティング",
-    "room": "B-202",
-    "department": "法務",
-    "owner": "岡本 剛",
     "start": "2024-09-05T09:15:00+09:00",
     "end": "2024-09-05T10:15:00+09:00",
     "isCompanyWide": false,
-    "color": "#3b82f6",
-    "textColor": "#ffffff"
+    "departmentId": "dep-01",
+    "ownerUserId": "usr-10"
   },
   {
     "id": "bk-011",
     "title": "四半期レビュー",
-    "room": "A-101",
-    "department": "経営企画",
-    "owner": "原 さゆり",
     "start": "2024-09-05T13:30:00+09:00",
     "end": "2024-09-05T15:00:00+09:00",
     "isCompanyWide": true,
-    "color": "#1d4ed8",
-    "textColor": "#ffffff"
+    "departmentId": "dep-01",
+    "ownerUserId": "usr-11"
   },
   {
     "id": "bk-012",
     "title": "データ分析ワークショップ",
-    "room": "D-404",
-    "department": "アナリティクス",
-    "owner": "森内 遥",
     "start": "2024-09-08T10:00:00+09:00",
     "end": "2024-09-08T12:00:00+09:00",
     "isCompanyWide": false,
-    "color": "#7c3aed",
-    "textColor": "#ffffff"
+    "departmentId": "dep-03",
+    "ownerUserId": "usr-12"
   },
   {
     "id": "bk-013",
     "title": "QA バグトリアージ",
-    "room": "C-303",
-    "department": "QA",
-    "owner": "福田 和",
     "start": "2024-09-08T15:00:00+09:00",
     "end": "2024-09-08T16:00:00+09:00",
     "isCompanyWide": false,
-    "color": "#f97316",
-    "textColor": "#1f2937"
+    "departmentId": "dep-03",
+    "ownerUserId": "usr-13"
   },
   {
     "id": "bk-014",
     "title": "人事制度検討会",
-    "room": "B-202",
-    "department": "人事",
-    "owner": "高橋 由美",
     "start": "2024-09-09T11:00:00+09:00",
     "end": "2024-09-09T12:30:00+09:00",
     "isCompanyWide": false,
-    "color": "#a855f7",
-    "textColor": "#ffffff"
+    "departmentId": "dep-01",
+    "ownerUserId": "usr-05"
   },
   {
     "id": "bk-015",
     "title": "プロダクトロードマップ",
-    "room": "A-101",
-    "department": "プロダクト",
-    "owner": "佐藤 太郎",
     "start": "2024-09-09T14:00:00+09:00",
     "end": "2024-09-09T15:30:00+09:00",
     "isCompanyWide": true,
-    "color": "#2563eb",
-    "textColor": "#ffffff"
+    "departmentId": "dep-03",
+    "ownerUserId": "usr-01"
   },
   {
     "id": "bk-016",
     "title": "顧客定例",
-    "room": "オンライン",
-    "department": "営業",
-    "owner": "鈴木 次郎",
     "start": "2024-09-10T09:00:00+09:00",
     "end": "2024-09-10T10:00:00+09:00",
     "isCompanyWide": false,
-    "color": "#f97316",
-    "textColor": "#1f2937"
+    "departmentId": "dep-02",
+    "ownerUserId": "usr-03"
   },
   {
     "id": "bk-017",
     "title": "プロダクトデザインレビュー",
-    "room": "デザインラボ",
-    "department": "デザイン",
-    "owner": "田中 花子",
     "start": "2024-09-10T13:00:00+09:00",
     "end": "2024-09-10T14:30:00+09:00",
     "isCompanyWide": false,
-    "color": "#ec4899",
-    "textColor": "#ffffff"
+    "departmentId": "dep-03",
+    "ownerUserId": "usr-02"
   },
   {
     "id": "bk-018",
     "title": "セールスパイプライン共有",
-    "room": "C-303",
-    "department": "営業",
-    "owner": "鈴木 次郎",
     "start": "2024-09-11T15:00:00+09:00",
     "end": "2024-09-11T16:30:00+09:00",
     "isCompanyWide": false,
-    "color": "#f97316",
-    "textColor": "#1f2937"
+    "departmentId": "dep-02",
+    "ownerUserId": "usr-03"
   },
   {
     "id": "bk-019",
     "title": "セキュリティ訓練",
-    "room": "ホール",
-    "department": "情報セキュリティ",
-    "owner": "大野 仁",
     "start": "2024-09-12T10:00:00+09:00",
     "end": "2024-09-12T12:00:00+09:00",
     "isCompanyWide": true,
-    "color": "#ef4444",
-    "textColor": "#ffffff"
+    "departmentId": "dep-01",
+    "ownerUserId": "usr-15"
   },
   {
     "id": "bk-020",
     "title": "リーンキャンバス検討",
-    "room": "A-101",
-    "department": "新規事業",
-    "owner": "橋本 光",
     "start": "2024-09-12T14:15:00+09:00",
     "end": "2024-09-12T15:45:00+09:00",
     "isCompanyWide": false,
-    "color": "#0ea5e9",
-    "textColor": "#0f172a"
+    "departmentId": "dep-02",
+    "ownerUserId": "usr-14"
+  },
+  {
+    "id": "bk-021",
+    "title": "プロジェクトキックオフ",
+    "start": "2024-10-01T09:00:00+09:00",
+    "end": "2024-10-01T10:30:00+09:00",
+    "isCompanyWide": true,
+    "departmentId": "dep-03",
+    "ownerUserId": "usr-01"
+  },
+  {
+    "id": "bk-022",
+    "title": "UXレビュー",
+    "start": "2024-10-01T11:00:00+09:00",
+    "end": "2024-10-01T12:00:00+09:00",
+    "isCompanyWide": false,
+    "departmentId": "dep-03",
+    "ownerUserId": "usr-02"
+  },
+  {
+    "id": "bk-023",
+    "title": "営業戦略会議",
+    "start": "2024-10-01T15:00:00+09:00",
+    "end": "2024-10-01T16:30:00+09:00",
+    "isCompanyWide": false,
+    "departmentId": "dep-02",
+    "ownerUserId": "usr-03"
+  },
+  {
+    "id": "bk-024",
+    "title": "開発定例",
+    "start": "2024-10-02T09:30:00+09:00",
+    "end": "2024-10-02T10:30:00+09:00",
+    "isCompanyWide": false,
+    "departmentId": "dep-03",
+    "ownerUserId": "usr-04"
+  },
+  {
+    "id": "bk-025",
+    "title": "採用面談",
+    "start": "2024-10-02T13:00:00+09:00",
+    "end": "2024-10-02T14:00:00+09:00",
+    "isCompanyWide": false,
+    "departmentId": "dep-01",
+    "ownerUserId": "usr-05"
+  },
+  {
+    "id": "bk-026",
+    "title": "サーバーメンテナンス準備",
+    "start": "2024-10-02T16:00:00+09:00",
+    "end": "2024-10-02T17:30:00+09:00",
+    "isCompanyWide": false,
+    "departmentId": "dep-03",
+    "ownerUserId": "usr-06"
+  },
+  {
+    "id": "bk-027",
+    "title": "マーケティング方針共有",
+    "start": "2024-10-03T10:00:00+09:00",
+    "end": "2024-10-03T11:30:00+09:00",
+    "isCompanyWide": false,
+    "departmentId": "dep-02",
+    "ownerUserId": "usr-07"
+  },
+  {
+    "id": "bk-028",
+    "title": "CS ナレッジ共有",
+    "start": "2024-10-03T15:30:00+09:00",
+    "end": "2024-10-03T16:30:00+09:00",
+    "isCompanyWide": false,
+    "departmentId": "dep-02",
+    "ownerUserId": "usr-08"
+  },
+  {
+    "id": "bk-029",
+    "title": "全社会議リハーサル",
+    "start": "2024-10-04T14:00:00+09:00",
+    "end": "2024-10-04T15:30:00+09:00",
+    "isCompanyWide": true,
+    "departmentId": "dep-01",
+    "ownerUserId": "usr-09"
+  },
+  {
+    "id": "bk-030",
+    "title": "法務確認ミーティング",
+    "start": "2024-10-05T09:15:00+09:00",
+    "end": "2024-10-05T10:15:00+09:00",
+    "isCompanyWide": false,
+    "departmentId": "dep-01",
+    "ownerUserId": "usr-10"
+  },
+  {
+    "id": "bk-031",
+    "title": "四半期レビュー",
+    "start": "2024-10-05T13:30:00+09:00",
+    "end": "2024-10-05T15:00:00+09:00",
+    "isCompanyWide": true,
+    "departmentId": "dep-01",
+    "ownerUserId": "usr-11"
+  },
+  {
+    "id": "bk-032",
+    "title": "データ分析ワークショップ",
+    "start": "2024-10-08T10:00:00+09:00",
+    "end": "2024-10-08T12:00:00+09:00",
+    "isCompanyWide": false,
+    "departmentId": "dep-03",
+    "ownerUserId": "usr-12"
+  },
+  {
+    "id": "bk-033",
+    "title": "QA バグトリアージ",
+    "start": "2024-10-08T15:00:00+09:00",
+    "end": "2024-10-08T16:00:00+09:00",
+    "isCompanyWide": false,
+    "departmentId": "dep-03",
+    "ownerUserId": "usr-13"
+  },
+  {
+    "id": "bk-034",
+    "title": "人事制度検討会",
+    "start": "2024-10-09T11:00:00+09:00",
+    "end": "2024-10-09T12:30:00+09:00",
+    "isCompanyWide": false,
+    "departmentId": "dep-01",
+    "ownerUserId": "usr-05"
+  },
+  {
+    "id": "bk-035",
+    "title": "プロダクトロードマップ",
+    "start": "2024-10-09T14:00:00+09:00",
+    "end": "2024-10-09T15:30:00+09:00",
+    "isCompanyWide": true,
+    "departmentId": "dep-03",
+    "ownerUserId": "usr-01"
+  },
+  {
+    "id": "bk-036",
+    "title": "顧客定例",
+    "start": "2024-10-10T09:00:00+09:00",
+    "end": "2024-10-10T10:00:00+09:00",
+    "isCompanyWide": false,
+    "departmentId": "dep-02",
+    "ownerUserId": "usr-03"
+  },
+  {
+    "id": "bk-037",
+    "title": "プロダクトデザインレビュー",
+    "start": "2024-10-10T13:00:00+09:00",
+    "end": "2024-10-10T14:30:00+09:00",
+    "isCompanyWide": false,
+    "departmentId": "dep-03",
+    "ownerUserId": "usr-02"
+  },
+  {
+    "id": "bk-038",
+    "title": "セールスパイプライン共有",
+    "start": "2024-10-11T15:00:00+09:00",
+    "end": "2024-10-11T16:30:00+09:00",
+    "isCompanyWide": false,
+    "departmentId": "dep-02",
+    "ownerUserId": "usr-03"
+  },
+  {
+    "id": "bk-039",
+    "title": "セキュリティ訓練",
+    "start": "2024-10-12T10:00:00+09:00",
+    "end": "2024-10-12T12:00:00+09:00",
+    "isCompanyWide": true,
+    "departmentId": "dep-01",
+    "ownerUserId": "usr-15"
+  },
+  {
+    "id": "bk-040",
+    "title": "リーンキャンバス検討",
+    "start": "2024-10-12T14:15:00+09:00",
+    "end": "2024-10-12T15:45:00+09:00",
+    "isCompanyWide": false,
+    "departmentId": "dep-02",
+    "ownerUserId": "usr-14"
   }
 ]

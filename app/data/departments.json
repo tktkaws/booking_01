@@ -1,0 +1,5 @@
+[
+  { "id": "dep-01", "name": "総務", "default_color": "#C1E0D0" },
+  { "id": "dep-02", "name": "営業開発推進", "default_color": "#D5E9ED" },
+  { "id": "dep-03", "name": "制作", "default_color": "#F6EEBE" }
+]

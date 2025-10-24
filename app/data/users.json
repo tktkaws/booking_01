@@ -1,0 +1,92 @@
+[
+  {
+    "id": "usr-01",
+    "department_id": "dep-03",
+    "display_name": "佐藤 太郎",
+    "role": "admin"
+  },
+  {
+    "id": "usr-02",
+    "department_id": "dep-03",
+    "display_name": "田中 花子",
+    "role": "member"
+  },
+  {
+    "id": "usr-03",
+    "department_id": "dep-02",
+    "display_name": "鈴木 次郎",
+    "role": "member"
+  },
+  {
+    "id": "usr-04",
+    "department_id": "dep-03",
+    "display_name": "中村 拓也",
+    "role": "member"
+  },
+  {
+    "id": "usr-05",
+    "department_id": "dep-01",
+    "display_name": "高橋 由美",
+    "role": "member"
+  },
+  {
+    "id": "usr-06",
+    "department_id": "dep-03",
+    "display_name": "小林 健",
+    "role": "member"
+  },
+  {
+    "id": "usr-07",
+    "department_id": "dep-02",
+    "display_name": "伊藤 美咲",
+    "role": "member"
+  },
+  {
+    "id": "usr-08",
+    "department_id": "dep-02",
+    "display_name": "山田 真",
+    "role": "member"
+  },
+  {
+    "id": "usr-09",
+    "department_id": "dep-01",
+    "display_name": "松本 彩",
+    "role": "member"
+  },
+  {
+    "id": "usr-10",
+    "department_id": "dep-01",
+    "display_name": "岡本 剛",
+    "role": "member"
+  },
+  {
+    "id": "usr-11",
+    "department_id": "dep-01",
+    "display_name": "原 さゆり",
+    "role": "member"
+  },
+  {
+    "id": "usr-12",
+    "department_id": "dep-03",
+    "display_name": "森内 遥",
+    "role": "member"
+  },
+  {
+    "id": "usr-13",
+    "department_id": "dep-03",
+    "display_name": "福田 和",
+    "role": "member"
+  },
+  {
+    "id": "usr-14",
+    "department_id": "dep-02",
+    "display_name": "橋本 光",
+    "role": "member"
+  },
+  {
+    "id": "usr-15",
+    "department_id": "dep-01",
+    "display_name": "大野 仁",
+    "role": "member"
+  }
+]
