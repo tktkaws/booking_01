@@ -131,7 +131,7 @@ export function AuthButton() {
         <button
           type="button"
           onClick={() => setProfileOpen(true)}
-          className="px-3 py-1 inline-flex items-center gap-2 rounded-md px-2 py-1 text-sm font-medium text-slate-700 hover:ring-2"
+          className="px-3 py-1 inline-flex items-center gap-2 rounded-md px-2 py-1 text-sm font-medium text-slate-800 hover:ring-2"
           title={email ?? undefined}
         >
           <span className="truncate max-w-[12rem]">{displayName ?? email}</span>
@@ -148,7 +148,7 @@ export function AuthButton() {
         <button
           type="button"
           onClick={handleLogout}
-          className="rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-600 hover:ring-2"
+          className="rounded border font-bold border-slate-300 bg-white px-3 h-9 grid items-center text-sm text-slate-800 hover:ring-2"
         >
           ログアウト
         </button>
@@ -193,7 +193,7 @@ export function AuthButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded-md bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm"
+        className="rounded-md bg-slate-800 px-4 h-9 grid items-center text-sm font-semibold text-white shadow-sm"
       >
         ログイン
       </button>

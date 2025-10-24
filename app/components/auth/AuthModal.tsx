@@ -163,7 +163,7 @@ export function AuthModal({ open, onClose, onSignedIn }: AuthModalProps) {
   return (
     <dialog
       ref={dialogRef}
-      className="fixed left-1/2 top-1/2 max-h-[80vh] w-[min(520px,90vw)] -translate-x-1/2 -translate-y-1/2 transform overflow-hidden rounded-xl border border-slate-200 bg-white p-0 text-slate-900 shadow-2xl backdrop:bg-slate-800/60"
+      className="fixed left-1/2 top-1/2 max-h-[80vh] w-[min(520px,90vw)] -translate-x-1/2 -translate-y-1/2 transform overflow-hidden rounded-xl border border-slate-200 bg-white p-0 text-slate-800 shadow-2xl backdrop:bg-slate-800/60"
     >
       <form method="dialog" className="flex max-h-[80vh] flex-col" onSubmit={(e) => e.preventDefault()}>
         <header className="flex items-start justify-between border-b border-slate-200 px-6 py-4">
@@ -173,28 +173,28 @@ export function AuthModal({ open, onClose, onSignedIn }: AuthModalProps) {
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex items-center justify-center rounded text-slate-600 hover:ring-2 hover:bg-slate-50"
+            className="inline-flex items-center justify-center rounded text-slate-800 hover:ring-2 hover:bg-slate-50"
             aria-label="モーダルを閉じる"
           >
             <X size={24} color="#0f172b" aria-hidden="true" />
           </button>
         </header>
         <div className="overflow-y-auto px-6 py-6">
-          <div className="mb-3 text-sm text-slate-600">Email とパスワードのみ（確認メールは送信しません）。</div>
+          <div className="mb-3 text-sm text-slate-800">Email とパスワードのみ（確認メールは送信しません）。</div>
           <div className="space-y-2">
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="email@example.com"
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              className="w-full rounded-md border border-slate-300 px-3 h-9 grid items-center text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-200"
             />
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="パスワード"
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              className="w-full rounded-md border border-slate-300 px-3 h-9 grid items-center text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-200"
             />
             {mode === "signup" && (
               <>
@@ -203,12 +203,12 @@ export function AuthModal({ open, onClose, onSignedIn }: AuthModalProps) {
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   placeholder="お名前（表示名）"
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  className="w-full rounded-md border border-slate-300 px-3 h-9 grid items-center text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-200"
                 />
                 <select
                   value={departmentId}
                   onChange={(e) => setDepartmentId(e.target.value)}
-                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 h-9 grid items-center text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-200"
                 >
                   {departments.map((d) => (
                     <option key={d.id} value={d.id}>
@@ -228,7 +228,7 @@ export function AuthModal({ open, onClose, onSignedIn }: AuthModalProps) {
             type="button"
             disabled={loading}
             onClick={mode === "login" ? handleLogin : handleSignup}
-            className="rounded-md bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm disabled:opacity-50"
+            className="rounded-md bg-slate-800 px-4 h-9 grid items-center text-sm font-semibold text-white shadow-sm disabled:opacity-50"
           >
             {loading ? "処理中..." : mode === "login" ? "ログイン" : "サインアップ"}
           </button>
